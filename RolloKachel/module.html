@@ -1,0 +1,234 @@
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
+:root{--tile-padding:0px}
+
+.tile{
+  width:100%;
+  height:100%;
+  position:relative;
+  overflow:hidden;
+  font-size:12px;
+  background:transparent;
+  color:var(--text,#fff);
+  padding:1em 1em 0.75em;
+  box-shadow:0 4px 20px rgba(0,0,0,.45);
+  display:flex;
+  flex-direction:column;
+}
+.tile::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--accent,#2196F3);transition:background .3s;
+}
+
+.header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:0.5em;gap:0.67em;
+}
+.tile-name{
+  font-size:1.08em;font-weight:500;color:var(--text-sub,#8C9BAB);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+/* ── Shutter SVG ─────────────────────────────────── */
+.shutter-wrap{
+  flex:1;min-height:0;
+  position:relative;
+  padding:0.5em 0;
+}
+.shutter-svg{display:block;width:100%;height:100%;}
+
+/* ── Quick-Buttons ───────────────────────────────── */
+.quick-btns{display:flex;gap:0.67em;margin-bottom:0.5em}
+.quick-btn{
+  flex:1;padding:0.58em 0;border-radius:0.75em;
+  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);
+  color:var(--text,#fff);font-size:1.08em;cursor:pointer;
+  transition:background .15s,transform .1s;outline:none;
+  display:flex;align-items:center;justify-content:center;gap:0.33em;
+}
+.quick-btn:hover{background:rgba(255,255,255,.14)}
+.quick-btn:active{transform:scale(.94)}
+
+/* ── Feinsteuerung Reihe ─────────────────────────── */
+.ctrl-row{
+  display:flex;align-items:center;gap:0.67em;
+  padding:0.5em 0.83em;background:rgba(255,255,255,.04);
+  border-radius:0.75em;border:1px solid rgba(255,255,255,.06);
+  margin-bottom:0.33em;
+}
+.ctrl-label{
+  font-size:0.92em;color:var(--text-sub,#8C9BAB);
+  text-transform:uppercase;letter-spacing:.4px;flex:1;
+}
+.ctrl-btn{
+  width:2.17em;aspect-ratio:1;border-radius:50%;
+  border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);
+  color:var(--text,#fff);font-size:1.33em;cursor:pointer;outline:none;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,transform .1s;
+}
+.ctrl-btn:hover{background:rgba(255,255,255,.16)}
+.ctrl-btn:active{transform:scale(.88)}
+.ctrl-val{font-size:1.25em;font-weight:300;min-width:3.17em;text-align:center}
+</style>
+
+<div id="tile" class="tile">
+
+  <div class="header">
+    <span class="tile-name" id="tile-name"></span>
+</div>
+
+  <!-- Shutter visual -->
+  <div class="shutter-wrap">
+    <svg class="shutter-svg" viewBox="0 0 120 96">
+      <defs>
+        <clipPath id="blind-clip">
+          <rect id="blind-clip-rect" x="10" y="5" width="100" height="0"/>
+        </clipPath>
+      </defs>
+      <!-- Window background (open area) -->
+      <rect x="10" y="5" width="100" height="82" rx="3" fill="rgba(0,0,0,0.35)"/>
+      <!-- Blind fill (descends from top, clipped) -->
+      <rect x="10" y="5" width="100" height="82" rx="3"
+            style="fill:var(--accent-bg)" clip-path="url(#blind-clip)"/>
+      <!-- Slat lines (clipped to blind area) -->
+      <g clip-path="url(#blind-clip)" style="stroke:var(--accent)" stroke-width="1.2" opacity="0.6">
+        <line x1="14" y1="17" x2="106" y2="17"/>
+        <line x1="14" y1="29" x2="106" y2="29"/>
+        <line x1="14" y1="41" x2="106" y2="41"/>
+        <line x1="14" y1="53" x2="106" y2="53"/>
+        <line x1="14" y1="65" x2="106" y2="65"/>
+        <line x1="14" y1="77" x2="106" y2="77"/>
+      </g>
+      <!-- Window frame -->
+      <rect x="10" y="5" width="100" height="82" rx="3"
+            fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+      <!-- Bottom sill -->
+      <rect x="4" y="86" width="112" height="5" rx="2.5" fill="rgba(255,255,255,0.15)"/>
+    </svg>
+  </div>
+
+  <!-- Quick-Buttons -->
+  <div class="quick-btns">
+    <button class="quick-btn" onclick="sendOpen()">&#8593; Auf</button>
+    <button class="quick-btn" onclick="sendClose()">&#8595; Zu</button>
+  </div>
+
+  <!-- Position Feinsteuerung -->
+  <div class="ctrl-row" id="pos-row" style="display:none">
+    <span class="ctrl-label">Position</span>
+    <button class="ctrl-btn" onclick="adjustPos(-1)">&#8722;</button>
+    <div class="ctrl-val" id="pos-val">--%</div>
+    <button class="ctrl-btn" onclick="adjustPos(1)">&#43;</button>
+  </div>
+
+  <!-- Lamellen Feinsteuerung -->
+  <div class="ctrl-row" id="slat-row" style="display:none">
+    <span class="ctrl-label">Lamellen</span>
+    <button class="ctrl-btn" onclick="adjustSlats(-1)">&#8722;</button>
+    <div class="ctrl-val" id="slat-val">--%</div>
+    <button class="ctrl-btn" onclick="adjustSlats(1)">&#43;</button>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  if(typeof ResizeObserver==='undefined')return;
+  var t=document.getElementById('tile');
+  new ResizeObserver(function(e){
+    var bs=e[0].borderBoxSize&&e[0].borderBoxSize[0];
+    var w=bs?bs.inlineSize:t.offsetWidth;
+    var h=bs?bs.blockSize:t.offsetHeight;
+    t.style.fontSize=Math.max(10,Math.min(20,Math.min(w,h)/17.5)).toFixed(2)+'px';
+  }).observe(t);
+})();
+
+var _currentPos   = null;
+var _currentSlats = null;
+
+function intToHex(n) {
+  return '#' + ('000000' + n.toString(16)).slice(-6);
+}
+
+function handleMessage(jsonStr) {
+  var d = JSON.parse(jsonStr);
+  var colors = d.colors || {};
+  var accentInt = colors.accent || 2201331;
+  var r = (accentInt >> 16) & 0xff;
+  var g = (accentInt >>  8) & 0xff;
+  var b =  accentInt        & 0xff;
+  var tile = document.getElementById("tile");
+  tile.style.setProperty('--bg',        intToHex(colors.bg      || 1843237));
+  tile.style.setProperty('--text',      intToHex(colors.text    || 16777215));
+  tile.style.setProperty('--text-sub',  intToHex(colors.textSub || 9214891));
+  tile.style.setProperty('--accent',    intToHex(accentInt));
+  tile.style.setProperty('--accent-bg', 'rgba(' + r + ',' + g + ',' + b + ',.15)');
+
+  document.getElementById("tile-name").textContent = d.name || "";
+
+  var posRow = document.getElementById("pos-row");
+  if (d.position !== null) {
+    _currentPos = d.position;
+    document.getElementById("pos-val").textContent = d.position + "%";
+    posRow.style.removeProperty("display");
+    setShutterPos(d.position);
+  } else {
+    posRow.style.display = "none";
+    setShutterPos(0);
+  }
+
+  var slatRow = document.getElementById("slat-row");
+  if (d.slats !== null) {
+    _currentSlats = d.slats;
+    document.getElementById("slat-val").textContent = d.slats + "%";
+    slatRow.style.removeProperty("display");
+  } else {
+    slatRow.style.display = "none";
+  }
+}
+
+function setShutterPos(pos) {
+  // 0 = open (no fill), 100 = closed (full fill); inner height = 82
+  document.getElementById("blind-clip-rect").setAttribute("height", (pos / 100 * 82).toFixed(1));
+}
+
+function sendOpen() {
+  _setPos(_config.openValue);
+  if (typeof requestAction !== 'undefined') requestAction("SetPosition", _config.openValue);
+}
+
+function sendClose() {
+  _setPos(_config.closeValue);
+  if (typeof requestAction !== 'undefined') requestAction("SetPosition", _config.closeValue);
+}
+
+function adjustPos(dir) {
+  if (_currentPos === null) return;
+  var next = Math.max(0, Math.min(100, _currentPos + dir * _config.step));
+  _setPos(next);
+  if (typeof requestAction !== 'undefined') requestAction("SetPosition", next);
+}
+
+function adjustSlats(dir) {
+  if (_currentSlats === null) return;
+  var next = Math.max(0, Math.min(100, _currentSlats + dir * _config.step));
+  _currentSlats = next;
+  document.getElementById("slat-val").textContent = next + "%";
+  if (typeof requestAction !== 'undefined') requestAction("SetSlats", next);
+}
+
+function _setPos(val) {
+  _currentPos = val;
+  document.getElementById("pos-val").textContent = val + "%";
+  setShutterPos(val);
+}
+
+if (typeof requestAction === 'undefined') {
+  _config = {openValue: 0, closeValue: 100, step: 10};
+  handleMessage(JSON.stringify({
+    name: 'Wohnzimmer Rollo', position: 65, slats: 30,
+    colors: {bg: 1843237, text: 16777215, textSub: 9214891, accent: 2201331}
+  }));
+}
+</script>

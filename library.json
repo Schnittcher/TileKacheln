@@ -1,0 +1,13 @@
+{
+    "id": "{4F8A2D1C-3B7E-4C9A-8F5D-2E6A1B9C4D7F}",
+    "name": "Tile Kacheln",
+    "author": "Kai Schnittcher",
+    "url": "https://deinsmarthome.info",
+    
+    "compatibility": {
+        "build": 8.1
+    },
+    "version": "1.0",
+    "build": 0,
+    "date": 0
+}

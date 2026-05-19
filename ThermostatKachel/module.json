@@ -1,0 +1,12 @@
+{
+    "id": "{1A2B3C4D-5E6F-7A8B-9C0D-E1F2A3B4C5D6}",
+    "parentRequirements": [],
+    "childRequirements": [],
+        "implemented": [],
+    "aliases": [],
+    "name": "Thermostat Kachel",
+    "type": 3,
+    "vendor": "",
+    "prefix": "TK",
+    "url": ""
+}

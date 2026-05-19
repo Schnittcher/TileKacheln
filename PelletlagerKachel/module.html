@@ -1,0 +1,199 @@
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
+
+.tile{
+  width:100%;
+  height:100%;
+  position:relative;
+  overflow:hidden;
+  font-size:12px;
+  background:transparent;
+  color:var(--text,#fff);
+  padding:1em 1em 0.75em;
+  box-shadow:0 4px 20px rgba(0,0,0,.45);
+  display:flex;
+  flex-direction:column;
+}
+.tile::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--accent,#FF6B00);transition:background .3s;
+}
+
+.header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:0.5em;gap:0.67em;
+}
+.tile-name{
+  font-size:1.08em;font-weight:500;color:var(--text-sub,#8C9BAB);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;
+}
+.storage-wrap{
+  flex:1;min-height:0;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:0.5em;
+}
+.storage-svg{display:block;width:100%;height:100%;}
+
+.value-display{
+  text-align:center;
+}
+.value-big{
+  font-size:3em;font-weight:200;letter-spacing:-0.08em;line-height:1.1;
+}
+.value-unit{
+  font-size:1.33em;font-weight:400;color:var(--text-sub,#8C9BAB);
+  margin-left:0.33em;
+}
+</style>
+
+<div id="tile" class="tile">
+
+  <div class="header">
+    <span class="tile-name" id="tile-name"></span>
+</div>
+
+  <div class="storage-wrap">
+    <!-- Pelletlager: Raumquerschnitt mit Pellet-Textur -->
+    <svg class="storage-svg" viewBox="0 0 100 108" id="storage-svg">
+      <defs>
+        <!-- Pellet-Textur: versetzte Reihen kleiner Zylinder (Aufsicht) -->
+        <pattern id="pellet-pat" x="0" y="0" width="9" height="6.5" patternUnits="userSpaceOnUse">
+          <ellipse cx="4.5" cy="2"   rx="3.6" ry="1.5" fill="rgba(185,115,40,0.95)"/>
+          <ellipse cx="0"   cy="5"   rx="3.6" ry="1.5" fill="rgba(165,98,28,0.90)"/>
+          <ellipse cx="9"   cy="5"   rx="3.6" ry="1.5" fill="rgba(165,98,28,0.90)"/>
+        </pattern>
+        <!-- Clip auf den Innenraum -->
+        <clipPath id="room-clip">
+          <rect x="11" y="10" width="78" height="66"/>
+        </clipPath>
+      </defs>
+
+      <!-- ── Äußere Wände (Bunker / Lagerraum) ── -->
+      <rect x="4" y="4" width="92" height="72" rx="3"
+            fill="rgba(255,255,255,0.05)"
+            stroke="rgba(255,255,255,0.22)" stroke-width="1.6"/>
+
+      <!-- Wandstruktur-Details: horizontale Fugen links & rechts -->
+      <line x1="4"  y1="28" x2="11" y2="28" stroke="rgba(255,255,255,0.10)" stroke-width="0.8"/>
+      <line x1="4"  y1="52" x2="11" y2="52" stroke="rgba(255,255,255,0.10)" stroke-width="0.8"/>
+      <line x1="89" y1="28" x2="96" y2="28" stroke="rgba(255,255,255,0.10)" stroke-width="0.8"/>
+      <line x1="89" y1="52" x2="96" y2="52" stroke="rgba(255,255,255,0.10)" stroke-width="0.8"/>
+
+      <!-- Innenraum: dunkler Hintergrund -->
+      <rect x="11" y="10" width="78" height="66" fill="rgba(0,0,0,0.45)"/>
+
+      <!-- ── Pellet-Füllung (von unten, geclippt) ── -->
+      <rect id="storage-fill" x="11" y="76" width="78" height="0"
+            fill="url(#pellet-pat)" clip-path="url(#room-clip)"/>
+
+      <!-- Akzentlinie an der Füllgrenze (Oberfläche) -->
+      <rect id="storage-fill-top" x="11" y="76" width="78" height="0"
+            fill="var(--accent)" opacity="0.55" clip-path="url(#room-clip)"/>
+
+      <!-- Innenrahmen -->
+      <rect x="11" y="10" width="78" height="66" fill="none"
+            stroke="rgba(255,255,255,0.10)" stroke-width="0.8"/>
+
+      <!-- ── Trichterauslauf ── -->
+      <polygon points="20,76 80,76 70,90 30,90"
+               fill="rgba(0,0,0,0.50)"
+               stroke="rgba(255,255,255,0.16)" stroke-width="1.3"
+               stroke-linejoin="round"/>
+
+      <!-- Auslaufrohr -->
+      <rect x="37" y="90" width="26" height="8" rx="2"
+            fill="rgba(0,0,0,0.60)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+      <!-- Rohrschlitz (Öffnung) -->
+      <rect x="44" y="95" width="12" height="5" rx="1"
+            fill="rgba(0,0,0,0.75)" stroke="rgba(255,255,255,0.08)" stroke-width="0.6"/>
+
+      <!-- ── Deckelluke oben (Befüllung) ── -->
+      <rect x="38" y="4" width="24" height="7" rx="2"
+            fill="rgba(0,0,0,0.35)" stroke="rgba(255,255,255,0.18)" stroke-width="0.9"/>
+      <line x1="50" y1="4" x2="50" y2="11"
+            stroke="rgba(255,255,255,0.12)" stroke-width="0.7"/>
+
+      <!-- ── Prozentzahl im Innenraum ── -->
+      <text id="storage-pct-text" x="50" y="47" text-anchor="middle"
+            dominant-baseline="middle"
+            font-size="13" fill="rgba(255,255,255,0.45)">--%</text>
+    </svg>
+  </div>
+
+  <div class="value-display" id="value-display" style="display:none">
+    <span class="value-big" id="value-big">--</span><span class="value-unit" id="value-unit"></span>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  if(typeof ResizeObserver==='undefined')return;
+  var t=document.getElementById('tile');
+  new ResizeObserver(function(e){
+    var bs=e[0].borderBoxSize&&e[0].borderBoxSize[0];
+    var w=bs?bs.inlineSize:t.offsetWidth;
+    var h=bs?bs.blockSize:t.offsetHeight;
+    t.style.fontSize=Math.max(10,Math.min(20,Math.min(w,h)/17.5)).toFixed(2)+'px';
+  }).observe(t);
+})();
+
+function intToHex(n){
+  return '#'+('000000'+n.toString(16)).slice(-6);
+}
+
+function handleMessage(jsonStr){
+  var d=JSON.parse(jsonStr);
+  var colors=d.colors||{};
+  var accentInt=colors.accent||16739072;
+  var r=(accentInt>>16)&0xff;
+  var g=(accentInt>>8)&0xff;
+  var b= accentInt    &0xff;
+
+  var tile=document.getElementById('tile');
+  tile.style.setProperty('--bg',       intToHex(colors.bg      ||1843237));
+  tile.style.setProperty('--text',     intToHex(colors.text    ||16777215));
+  tile.style.setProperty('--text-sub', intToHex(colors.textSub ||9214891));
+  tile.style.setProperty('--accent',   intToHex(accentInt));
+  tile.style.setProperty('--accent-bg','rgba('+r+','+g+','+b+',.18)');
+
+  document.getElementById('tile-name').textContent=d.name||'';
+
+  if(d.pct!==null&&d.pct!==undefined){
+    setStorageFill(d.pct);
+    document.getElementById('storage-pct-text').textContent=d.pct+'%';
+  } else {
+    setStorageFill(0);
+    document.getElementById('storage-pct-text').textContent='--%';
+  }
+
+  var valueDisplay=document.getElementById('value-display');
+  if(d.value!==null&&d.value!==undefined){
+    document.getElementById('value-big').textContent=parseFloat(d.value).toFixed(d.digits||0);
+    document.getElementById('value-unit').textContent=d.suffix||'';
+    valueDisplay.style.removeProperty('display');
+  } else {
+    valueDisplay.style.display='none';
+  }
+}
+
+function setStorageFill(pct){
+  // Innenraum: y=10, height=66 → Unterkante y=76
+  var bodyH=66, bodyBottom=76;
+  var fillH=(pct/100)*bodyH;
+  var fillY=bodyBottom-fillH;
+
+  document.getElementById('storage-fill').setAttribute('y',     fillY.toFixed(1));
+  document.getElementById('storage-fill').setAttribute('height',fillH.toFixed(1));
+  document.getElementById('storage-fill-top').setAttribute('y',     fillY.toFixed(1));
+  document.getElementById('storage-fill-top').setAttribute('height',Math.min(2,fillH).toFixed(1));
+}
+
+if(typeof requestAction==='undefined'){
+  handleMessage(JSON.stringify({
+    name:'Pelletlager',value:2450,suffix:'kg',digits:0,pct:65,
+    colors:{bg:1843237,text:16777215,textSub:9214891,accent:16739072}
+  }));
+}
+</script>

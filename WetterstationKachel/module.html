@@ -1,0 +1,367 @@
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
+:root{--tile-padding:0px}
+
+.tile{
+  width:100%;
+  height:100%;
+  position:relative;
+  overflow:hidden;
+  font-size:12px;
+  background:transparent;
+  color:var(--text,#fff);
+  padding:1em 1em 0.75em;
+  box-shadow:0 4px 20px rgba(0,0,0,.45);
+  display:flex;
+  flex-direction:column;
+}
+.tile::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--accent,#29B6F6);transition:background .3s;
+}
+
+/* ── Header ──────────────────────────────────────── */
+.header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:0.5em;gap:0.67em;flex-shrink:0;
+}
+.tile-name{
+  font-size:1.08em;font-weight:500;color:var(--text-sub,#8C9BAB);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
+/* ── Wind-Bereich ────────────────────────────────── */
+.wind-section{
+  flex:1;min-height:0;
+  display:flex;flex-direction:row;align-items:center;
+  gap:0.75em;
+}
+.compass-wrap{
+  flex:1;min-height:0;min-width:0;
+  display:flex;align-items:center;justify-content:center;
+  height:100%;overflow:hidden;
+}
+.compass-svg{display:block;}
+.wind-info{
+  flex-shrink:0;width:5em;
+  display:flex;flex-direction:column;justify-content:center;gap:0.25em;
+}
+.wind-speed-val{font-size:1.25em;font-weight:300;line-height:1}
+.wind-dir-txt{font-size:0.92em;color:var(--text-sub,#8C9BAB)}
+
+/* ── Trennlinie ──────────────────────────────────── */
+.divider{height:1px;background:rgba(255,255,255,.06);margin-bottom:0.33em;flex-shrink:0}
+
+/* ── Temperatur-Kasten (volle Breite) ────────────── */
+.temp-box{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0.28em 0.58em;
+  background:rgba(255,255,255,.04);
+  border-radius:0.42em;
+  border:1px solid rgba(255,255,255,.06);
+  margin-bottom:0.33em;
+  flex-shrink:0;
+}
+.temp-box-head{
+  display:flex;align-items:center;gap:0.28em;
+  color:var(--text-sub,#8C9BAB);font-size:0.8em;
+}
+.temp-box-head svg{width:0.9em;height:0.9em;flex-shrink:0;color:var(--accent,#29B6F6)}
+.temp-box-val{
+  font-size:1.58em;font-weight:200;letter-spacing:-0.03em;
+}
+
+/* ── Daten-Raster (2 Spalten) ────────────────────── */
+.data-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0.33em;
+  flex-shrink:0;
+}
+.gi{
+  display:flex;flex-direction:column;
+  padding:0.28em 0.5em;
+  background:rgba(255,255,255,.04);
+  border-radius:0.42em;
+  border:1px solid rgba(255,255,255,.06);
+  min-width:0;
+}
+.gi-head{
+  display:flex;align-items:center;gap:0.28em;
+  color:var(--text-sub,#8C9BAB);font-size:0.78em;
+  margin-bottom:0.15em;min-width:0;
+}
+.gi-head svg{width:0.9em;height:0.9em;flex-shrink:0;color:var(--accent,#29B6F6)}
+.gi-head span{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;
+}
+.gi-val{
+  font-size:1.08em;font-weight:300;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+</style>
+
+<div id="tile" class="tile">
+
+  <div class="header">
+    <span class="tile-name" id="tile-name"></span>
+  </div>
+
+  <!-- Windbereich mit zentrierter Kompassrose -->
+  <div class="wind-section" id="wind-section">
+    <div class="compass-wrap" id="compass-wrap">
+      <svg class="compass-svg" viewBox="0 0 72 72">
+        <circle cx="36" cy="36" r="32" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+        <circle cx="36" cy="36" r="22" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="36" y1="4"  x2="36" y2="11" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+        <line x1="36" y1="61" x2="36" y2="68" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+        <line x1="4"  y1="36" x2="11" y2="36" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+        <line x1="61" y1="36" x2="68" y2="36" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+        <line x1="13" y1="13" x2="18" y2="18" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+        <line x1="59" y1="13" x2="54" y2="18" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+        <line x1="13" y1="59" x2="18" y2="54" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+        <line x1="59" y1="59" x2="54" y2="54" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+        <text id="cp-N"  x="36" y="20" text-anchor="middle" font-size="8" font-weight="600" fill="rgba(255,255,255,0.35)">N</text>
+        <text id="cp-S"  x="36" y="57" text-anchor="middle" font-size="8" font-weight="600" fill="rgba(255,255,255,0.35)">S</text>
+        <text id="cp-O"  x="56" y="39" text-anchor="middle" font-size="8" font-weight="600" fill="rgba(255,255,255,0.35)">O</text>
+        <text id="cp-W"  x="16" y="39" text-anchor="middle" font-size="8" font-weight="600" fill="rgba(255,255,255,0.35)">W</text>
+        <text id="cp-NO" x="52" y="22" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.2)">NO</text>
+        <text id="cp-SO" x="52" y="55" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.2)">SO</text>
+        <text id="cp-SW" x="20" y="55" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.2)">SW</text>
+        <text id="cp-NW" x="20" y="22" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.2)">NW</text>
+        <g id="compass-arrow" transform="rotate(0,36,36)">
+          <polygon points="36,14 39,32 36,28 33,32" style="fill:var(--accent)" opacity="0.9"/>
+          <polygon points="36,58 39,40 36,44 33,40" fill="rgba(255,255,255,0.2)"/>
+        </g>
+        <circle cx="36" cy="36" r="3" style="fill:var(--accent)" opacity="0.9"/>
+      </svg>
+    </div>
+    <div class="wind-info" id="wind-info">
+      <div class="wind-speed-val" id="wind-speed-val"></div>
+      <div class="wind-dir-txt" id="wind-dir-txt"></div>
+    </div>
+  </div>
+
+  <div id="bottom-section">
+
+  <div class="divider" id="divider" style="display:none"></div>
+
+  <!-- Temperatur-Kasten (volle Breite) -->
+  <div class="temp-box" id="temp-box" style="display:none">
+    <div class="temp-box-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M14 14.76V3.5a2.5 2.5 0 00-5 0v11.26a4.5 4.5 0 105 0z"/>
+      </svg>
+      <span>Temperatur</span>
+    </div>
+    <div class="temp-box-val" id="val-temperature"></div>
+  </div>
+
+  <!-- Daten-Raster -->
+  <div class="data-grid" id="data-grid">
+
+    <div class="gi" id="gi-humidity" style="display:none">
+      <div class="gi-head">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6 9 4 13 4 16a8 8 0 0016 0c0-3-2-7-8-14z"/>
+        </svg>
+        <span>Feuchte</span>
+      </div>
+      <div class="gi-val" id="val-humidity"></div>
+    </div>
+
+    <div class="gi" id="gi-rain" style="display:none">
+      <div class="gi-head">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M6 16a4 4 0 01-.5-8A5 5 0 0117 10h1a3 3 0 010 6H6z" fill="currentColor" opacity="0.3" stroke="none"/>
+          <path d="M6 16a4 4 0 01-.5-8A5 5 0 0117 10h1a3 3 0 010 6H6z"/>
+          <line x1="8"  y1="19" x2="7"  y2="22"/>
+          <line x1="12" y1="19" x2="11" y2="22"/>
+          <line x1="16" y1="19" x2="15" y2="22"/>
+        </svg>
+        <span>Regen</span>
+      </div>
+      <div class="gi-val" id="val-rain"></div>
+    </div>
+
+    <div class="gi" id="gi-pressure" style="display:none">
+      <div class="gi-head">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="9"/>
+          <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
+          <line x1="12" y1="3"  x2="12" y2="6"/>
+          <line x1="12" y1="18" x2="12" y2="21"/>
+          <line x1="3"  y1="12" x2="6"  y2="12"/>
+          <line x1="18" y1="12" x2="21" y2="12"/>
+        </svg>
+        <span>Luftdruck</span>
+      </div>
+      <div class="gi-val" id="val-pressure"></div>
+    </div>
+
+    <div class="gi" id="gi-uv" style="display:none">
+      <div class="gi-head">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="4"/>
+          <line x1="12" y1="2"  x2="12" y2="5"/>
+          <line x1="12" y1="19" x2="12" y2="22"/>
+          <line x1="2"  y1="12" x2="5"  y2="12"/>
+          <line x1="19" y1="12" x2="22" y2="12"/>
+          <line x1="4.2"  y1="4.2"  x2="6.3"  y2="6.3"/>
+          <line x1="17.7" y1="17.7" x2="19.8" y2="19.8"/>
+          <line x1="4.2"  y1="19.8" x2="6.3"  y2="17.7"/>
+          <line x1="17.7" y1="6.3"  x2="19.8" y2="4.2"/>
+        </svg>
+        <span>UV-Index</span>
+      </div>
+      <div class="gi-val" id="val-uv"></div>
+    </div>
+
+  </div>
+
+  </div><!-- /bottom-section -->
+
+</div>
+
+<script>
+(function(){
+  if(typeof ResizeObserver==='undefined')return;
+  var t=document.getElementById('tile');
+  new ResizeObserver(function(e){
+    var bs=e[0].borderBoxSize&&e[0].borderBoxSize[0];
+    var w=bs?bs.inlineSize:t.offsetWidth;
+    var h=bs?bs.blockSize:t.offsetHeight;
+    var base=Math.max(10,Math.min(20,Math.min(w,h)/17.5));
+    t.style.fontSize=base.toFixed(2)+'px';
+
+    // Bottom-Section skalieren: darf max. 55% der verfügbaren Höhe einnehmen
+    var bottomEl=document.getElementById('bottom-section');
+    var headerEl=t.querySelector('.header');
+    if(bottomEl&&headerEl){
+      bottomEl.style.fontSize=base+'px';
+      var bh=bottomEl.scrollHeight;
+      var hH=headerEl.offsetHeight;
+      var tPad=base*1.75;
+      var availH=h-hH-tPad;
+      var maxBottom=availH*0.55;
+      if(bh>0&&maxBottom<bh){
+        var bScale=Math.max(0.7,maxBottom/bh);
+        bottomEl.style.fontSize=(base*bScale).toFixed(2)+'px';
+      }
+    }
+
+    // Kompass explizit auf verfügbare Fläche setzen
+    var cw=document.getElementById('compass-wrap');
+    if(cw){
+      var s=Math.min(cw.offsetWidth,cw.offsetHeight);
+      var svg=cw.querySelector('.compass-svg');
+      if(svg&&s>0){svg.style.width=s+'px';svg.style.height=s+'px';}
+    }
+  }).observe(t);
+})();
+
+var COMPASS_DIRS=['N','NO','O','SO','S','SW','W','NW'];
+
+function intToHex(n){return '#'+('000000'+n.toString(16)).slice(-6);}
+
+function fmt(entry){
+  if(!entry||entry.value===null||entry.value===undefined)return null;
+  var v=parseFloat(entry.value).toFixed(entry.digits||0);
+  return entry.suffix?v+' '+entry.suffix:v;
+}
+
+function degToCompass(deg){
+  return COMPASS_DIRS[Math.round(((deg%360)+360)%360/45)%8];
+}
+
+function handleMessage(jsonStr){
+  var d=JSON.parse(jsonStr);
+  var colors=d.colors||{};
+  var accentInt=colors.accent||2733814;
+  var r=(accentInt>>16)&0xff;
+  var g=(accentInt>>8)&0xff;
+  var b=accentInt&0xff;
+
+  var tile=document.getElementById('tile');
+  tile.style.setProperty('--bg',       intToHex(colors.bg     ||1843237));
+  tile.style.setProperty('--text',     intToHex(colors.text   ||16777215));
+  tile.style.setProperty('--text-sub', intToHex(colors.textSub||9214891));
+  tile.style.setProperty('--accent',   intToHex(accentInt));
+  tile.style.setProperty('--accent-bg','rgba('+r+','+g+','+b+',.15)');
+
+  document.getElementById('tile-name').textContent=d.name||'';
+
+  // Wind + Kompass
+  var windInfo=document.getElementById('wind-info');
+  if(d.windSpeed||d.windDir){
+    document.getElementById('wind-speed-val').textContent=d.windSpeed?fmt(d.windSpeed):'';
+    if(d.windDir){
+      var deg=((parseFloat(d.windDir.value)%360)+360)%360;
+      var compass=degToCompass(deg);
+      document.getElementById('wind-dir-txt').textContent=compass+'  ('+Math.round(deg)+'°)';
+      updateCompass(deg,compass,intToHex(accentInt));
+    } else {
+      document.getElementById('wind-dir-txt').textContent='';
+    }
+    windInfo.style.removeProperty('display');
+  } else {
+    windInfo.style.display='none';
+  }
+
+  // Temperatur-Kasten
+  var tempBox=document.getElementById('temp-box');
+  if(d.temperature){
+    var tv=parseFloat(d.temperature.value).toFixed(d.temperature.digits||1);
+    var ts=d.temperature.suffix||'°C';
+    document.getElementById('val-temperature').textContent=tv+ts;
+    tempBox.style.removeProperty('display');
+  } else {
+    tempBox.style.display='none';
+  }
+
+  showGi('gi-humidity','val-humidity',d.humidity);
+  showGi('gi-rain',    'val-rain',    d.rain);
+  showGi('gi-pressure','val-pressure',d.pressure);
+  showGi('gi-uv',      'val-uv',      d.uvIndex);
+
+  var hasBelow=d.temperature||d.humidity||d.rain||d.pressure||d.uvIndex;
+  var hasWind=d.windSpeed||d.windDir;
+  document.getElementById('divider').style.display=(hasWind&&hasBelow)?'':'none';
+}
+
+function updateCompass(deg,activeDir,accentHex){
+  COMPASS_DIRS.forEach(function(dir){
+    var el=document.getElementById('cp-'+dir);
+    if(!el)return;
+    var isCardinal=(dir==='N'||dir==='S'||dir==='O'||dir==='W');
+    el.setAttribute('fill',dir===activeDir?accentHex:(isCardinal?'rgba(255,255,255,0.35)':'rgba(255,255,255,0.2)'));
+    el.setAttribute('font-weight',dir===activeDir?'700':(isCardinal?'600':'400'));
+  });
+  document.getElementById('compass-arrow').setAttribute('transform','rotate('+deg.toFixed(1)+',36,36)');
+}
+
+function showGi(giId,valId,entry){
+  var gi=document.getElementById(giId);
+  if(entry){
+    document.getElementById(valId).textContent=fmt(entry);
+    gi.style.removeProperty('display');
+  } else {
+    gi.style.display='none';
+  }
+}
+
+if(typeof requestAction==='undefined'){
+  handleMessage(JSON.stringify({
+    name:'Wetterstation',
+    temperature:{value:22.5,suffix:'°C',  digits:1},
+    humidity:   {value:58,  suffix:'%',   digits:0},
+    windSpeed:  {value:12.3,suffix:'km/h',digits:1},
+    windDir:    {value:222, suffix:'°',   digits:0},
+    rain:       {value:0.2, suffix:'mm',  digits:1},
+    pressure:   {value:1013,suffix:'hPa', digits:0},
+    uvIndex:    {value:3,   suffix:'',    digits:0},
+    colors:{bg:1843237,text:16777215,textSub:9214891,accent:2733814}
+  }));
+}
+</script>

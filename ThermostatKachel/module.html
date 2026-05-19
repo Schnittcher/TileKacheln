@@ -1,0 +1,251 @@
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
+:root{--tile-padding:0px}
+
+.tile{
+  font-size:12px;
+  width:100%;
+  height:100%;
+  position:relative;
+  overflow:hidden;
+  background:transparent;
+  color:var(--text,#fff);
+  padding:1em 1em 0.75em;
+  box-shadow:0 4px 20px rgba(0,0,0,.45);
+  display:flex;
+  flex-direction:column;
+}
+.tile::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--accent,#444);transition:background .3s;
+}
+
+.dark-header{
+  display:flex;align-items:center;
+  margin-bottom:0.5em;
+}
+.dark-tile-name{
+  font-size:1.08em;font-weight:500;color:var(--text-sub,#8C9BAB);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  min-width:0;/* erlaubt Schrumpfen im Flex-Container */
+}
+
+.dark-temp-display{
+  text-align:center;margin:0.25em 0 0.5em;
+  flex:1;min-height:0;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.dark-current-temp{font-size:var(--temp-size,4em);font-weight:200;line-height:1.1;letter-spacing:-0.05em;white-space:nowrap;}
+.dark-humidity{
+  display:flex;align-items:center;justify-content:center;
+  gap:0.33em;font-size:1.08em;color:#6DB3F2;margin-top:0.42em;
+}
+.hum-icon{width:1em;height:1em;fill:#6DB3F2}
+
+.sp-label{
+  font-size:0.92em;color:var(--text-sub,#8C9BAB);text-align:center;
+  margin-bottom:0.33em;text-transform:uppercase;letter-spacing:.5px;
+}
+.setpoint-control{
+  display:flex;align-items:center;justify-content:center;gap:0.75em;
+  padding:0.42em 0.67em;background:rgba(255,255,255,.04);
+  border-radius:0.67em;border:1px solid rgba(255,255,255,.06);
+}
+.sp-btn{
+  width:2em;aspect-ratio:1;border-radius:50%;
+  border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);
+  color:var(--text,#fff);font-size:1.33em;line-height:1;cursor:pointer;
+  transition:background .15s,transform .1s;outline:none;
+  display:flex;align-items:center;justify-content:center;
+}
+.sp-btn:hover{background:rgba(255,255,255,.16)}
+.sp-btn:active{transform:scale(.88)}
+.sp-val{font-size:1.67em;font-weight:300;min-width:3em;text-align:center}
+
+.mode-buttons{display:flex;gap:0.33em;margin-top:0.5em;justify-content:center;flex-wrap:wrap}
+.mode-btn{
+  padding:0.42em 0.75em;border-radius:0.5em;
+  border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);
+  color:var(--text-sub,#8C9BAB);font-size:1em;cursor:pointer;
+  transition:all .15s;outline:none;
+}
+.mode-btn:hover{background:rgba(255,255,255,.12);color:var(--text,#fff)}
+.mode-btn.active{
+  border-color:var(--accent);color:var(--accent-fg);background:var(--accent-bg);
+}
+</style>
+
+<div id="tile" class="tile state-idle">
+
+  <div class="dark-header">
+    <span class="dark-tile-name" id="tile-name"></span>
+
+  </div>
+
+  <div class="dark-temp-display" id="temp-display-area">
+    <div class="dark-current-temp" id="current-temp">--&deg;</div>
+    <div class="dark-humidity" id="humidity" style="display:none">
+      <svg class="hum-icon" viewBox="0 0 24 24"><path d="M12 2C6 9 4 13 4 16a8 8 0 0016 0c0-3-2-7-8-14z"/></svg>
+      <span id="humidity-val"></span>
+    </div>
+  </div>
+
+  <div id="setpoint" style="display:none">
+    <div class="sp-label">Ziel-Temperatur</div>
+    <div class="setpoint-control">
+      <button class="sp-btn" onclick="adjustTemp(-1)">&#8722;</button>
+      <div class="sp-val" id="setpoint-val">--&deg;</div>
+      <button class="sp-btn" onclick="adjustTemp(1)">&#43;</button>
+    </div>
+  </div>
+
+  <div class="mode-buttons" id="mode-buttons"></div>
+
+</div>
+
+<script>
+var _currentTarget = null;
+var _config = {min: 5, max: 30, step: 0.5};
+
+// ── Responsive Skalierung ───────────────────────────────────────────────────
+(function(){
+  if(typeof ResizeObserver==='undefined')return;
+  var t=document.getElementById('tile');
+  new ResizeObserver(function(e){
+    var bs=e[0].borderBoxSize&&e[0].borderBoxSize[0];
+    var w=bs?bs.inlineSize:t.offsetWidth;
+    var h=bs?bs.blockSize:t.offsetHeight;
+    var base=Math.max(10,Math.min(20,Math.min(w,h)/17.5));
+    t.style.fontSize=base.toFixed(2)+'px';
+
+    // Temperatur-Schriftgröße an verfügbare Höhe des flex:1-Containers anpassen
+    var disp=document.getElementById('temp-display-area');
+    if(disp){
+      var dh=disp.offsetHeight;
+      // Ziel: Temperatur füllt ~55% der Containerhöhe, mind. 2em, max. 8em
+      var tempPx=Math.max(base*2, Math.min(base*6, dh*0.42));
+      t.style.setProperty('--temp-size', (tempPx/base).toFixed(3)+'em');
+    }
+  }).observe(t);
+})();
+
+// ── Hilfsfunktionen ──────────────────────────────────────────────────────────
+function intToHex(n) {
+  return '#' + ('000000' + n.toString(16)).slice(-6);
+}
+
+function applyAccent(colorInt) {
+  var r = (colorInt >> 16) & 0xff;
+  var g = (colorInt >>  8) & 0xff;
+  var b =  colorInt        & 0xff;
+  var hex = intToHex(colorInt);
+  var tile = document.getElementById("tile");
+  tile.style.setProperty('--accent',    hex);
+  tile.style.setProperty('--accent-fg', hex);
+  tile.style.setProperty('--accent-bg', 'rgba(' + r + ',' + g + ',' + b + ',.15)');
+}
+
+function handleMessage(jsonStr) {
+  var d = JSON.parse(jsonStr);
+  var modeClass = classifyMode(d.hvacMode);
+  document.getElementById("tile").className = "tile " + modeClass;
+
+  var colors = d.colors || {};
+  var colorMap = {
+    'state-heat': colors.heat || 16739072,
+    'state-cool': colors.cool || 2201331,
+    'state-auto': colors.auto || 5025616,
+    'state-off':  colors.off  || 10066329,
+    'state-idle': 12303291
+  };
+  applyAccent(colorMap[modeClass] || 12303291);
+
+  var tile = document.getElementById("tile");
+  tile.style.setProperty('--bg',       intToHex(colors.bg      || 1843237));
+  tile.style.setProperty('--text',     intToHex(colors.text    || 16777215));
+  tile.style.setProperty('--text-sub', intToHex(colors.textSub || 9214891));
+
+  // Config übernehmen (Sollwert-Grenzen)
+  if (d.config) {
+    _config.min  = d.config.min  != null ? d.config.min  : _config.min;
+    _config.max  = d.config.max  != null ? d.config.max  : _config.max;
+    _config.step = d.config.step != null ? d.config.step : _config.step;
+  }
+
+  document.getElementById("tile-name").textContent = d.name || "";
+
+document.getElementById("current-temp").textContent =
+    d.currentTemp !== null && d.currentTemp !== undefined
+      ? parseFloat(d.currentTemp).toFixed(1) + "°" : "--°";
+
+  var humWrap = document.getElementById("humidity");
+  if (d.humidity !== null && d.humidity !== undefined) {
+    document.getElementById("humidity-val").textContent = Math.round(d.humidity) + "%";
+    humWrap.style.display = "";
+  } else {
+    humWrap.style.display = "none";
+  }
+
+  var spWrap = document.getElementById("setpoint");
+  if (d.targetTemp !== null && d.targetTemp !== undefined) {
+    _currentTarget = parseFloat(d.targetTemp);
+    document.getElementById("setpoint-val").textContent = _currentTarget.toFixed(1) + "°";
+    spWrap.style.removeProperty("display");
+  } else {
+    spWrap.style.display = "none";
+  }
+
+  updateModeButtons(d);
+}
+
+function adjustTemp(dir) {
+  if (_currentTarget === null) return;
+  var next = Math.round((_currentTarget + dir * _config.step) * 10) / 10;
+  if (next < _config.min || next > _config.max) return;
+  _currentTarget = next;
+  document.getElementById("setpoint-val").textContent = next.toFixed(1) + "°";
+  if (typeof requestAction !== 'undefined') requestAction("SetTargetTemp", next);
+}
+
+function updateModeButtons(d) {
+  var mbEl = document.getElementById("mode-buttons");
+  if (!d.modeOptions || d.modeOptions.length === 0) {
+    mbEl.innerHTML = "";
+    return;
+  }
+  mbEl.innerHTML = "";
+  d.modeOptions.forEach(function(opt) {
+    var btn = document.createElement("button");
+    btn.className = "mode-btn" + (opt.value === d.hvacMode ? " active" : "");
+    btn.textContent = opt.label;
+    btn.onclick = function() { if (typeof requestAction !== 'undefined') requestAction("SetHVACMode", opt.value); };
+    mbEl.appendChild(btn);
+  });
+}
+
+function classifyMode(mode) {
+  if (mode === null || mode === undefined) return "state-idle";
+  var m = String(mode).toLowerCase();
+  if (["heat","heizen","1"].indexOf(m) !== -1) return "state-heat";
+  if (["cool","kühlen","cooling","2"].indexOf(m) !== -1) return "state-cool";
+  if (["auto","automatic","3"].indexOf(m) !== -1) return "state-auto";
+  if (["off","aus","0"].indexOf(m) !== -1) return "state-off";
+  return "state-idle";
+}
+
+
+if (typeof requestAction === 'undefined') {
+  handleMessage(JSON.stringify({
+    name: 'Thermostat', currentTemp: 21.5, targetTemp: 22.0, humidity: 48,
+    hvacMode: 'heat',
+    modeOptions: [
+      {value: 'heat', label: 'Heizen'}, {value: 'cool', label: 'Kühlen'},
+      {value: 'auto', label: 'Auto'},   {value: 'off',  label: 'Aus'}
+    ],
+    config: {min: 5, max: 30, step: 0.5},
+    colors: {heat: 16739072, cool: 2201331, auto: 5025616, off: 10066329,
+             bg: 1843237, text: 16777215, textSub: 9214891}
+  }));
+}
+</script>

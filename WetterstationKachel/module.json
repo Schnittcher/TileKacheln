@@ -1,0 +1,12 @@
+{
+    "id": "{E5F6A7B8-C9D0-1E2F-3A4B-5C6D7E8F9A0B}",
+    "parentRequirements": [],
+    "childRequirements": [],
+    "implemented": [],
+    "aliases": [],
+    "name": "Wetterstation Kachel",
+    "type": 3,
+    "vendor": "",
+    "prefix": "WSK",
+    "url": ""
+}
