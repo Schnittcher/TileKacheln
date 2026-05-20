@@ -1,7 +1,17 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
-:root{--tile-padding:0px}
+:root{
+  --text:         var(--content-color,#fff);
+  --text-sub:     color-mix(in srgb,var(--content-color,#fff) 55%,transparent);
+  --c-border:     color-mix(in srgb,var(--content-color,#fff) 20%,transparent);
+  --c-sill:       color-mix(in srgb,var(--content-color,#fff) 15%,transparent);
+  --c-ui-bg:      color-mix(in srgb,var(--content-color,#fff)  5%,transparent);
+  --c-ui-border:  color-mix(in srgb,var(--content-color,#fff)  8%,transparent);
+  --c-btn-bg:     color-mix(in srgb,var(--content-color,#fff)  6%,transparent);
+  --c-btn-border: color-mix(in srgb,var(--content-color,#fff) 13%,transparent);
+  --c-hover:      color-mix(in srgb,var(--content-color,#fff) 14%,transparent);
+}
 
 .tile{
   width:100%;
@@ -32,44 +42,58 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 /* ── Shutter SVG ─────────────────────────────────── */
 .shutter-wrap{
   flex:1;min-height:0;
-  position:relative;
-  padding:0.5em 0;
+  display:flex;align-items:stretch;
+  padding:0.33em 0;
 }
-.shutter-svg{display:block;width:100%;height:100%;}
+.shutter-svg{display:block;flex:1;min-height:0;min-width:0;}
 
 /* ── Quick-Buttons ───────────────────────────────── */
 .quick-btns{display:flex;gap:0.67em;margin-bottom:0.5em}
 .quick-btn{
   flex:1;padding:0.58em 0;border-radius:0.75em;
-  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);
+  border:1px solid var(--c-btn-border);background:var(--c-btn-bg);
   color:var(--text,#fff);font-size:1.08em;cursor:pointer;
   transition:background .15s,transform .1s;outline:none;
   display:flex;align-items:center;justify-content:center;gap:0.33em;
 }
-.quick-btn:hover{background:rgba(255,255,255,.14)}
+.quick-btn:hover{background:var(--c-hover)}
 .quick-btn:active{transform:scale(.94)}
 
 /* ── Feinsteuerung Reihe ─────────────────────────── */
 .ctrl-row{
-  display:flex;align-items:center;gap:0.67em;
-  padding:0.5em 0.83em;background:rgba(255,255,255,.04);
-  border-radius:0.75em;border:1px solid rgba(255,255,255,.06);
+  display:flex;flex-direction:column;gap:0.5em;
+  padding:0.5em 0.83em;background:var(--c-ui-bg);
+  border-radius:0.75em;border:1px solid var(--c-ui-border);
   margin-bottom:0.33em;
 }
+.ctrl-top{display:flex;align-items:center;gap:0.67em}
 .ctrl-label{
   font-size:0.92em;color:var(--text-sub,#8C9BAB);
   text-transform:uppercase;letter-spacing:.4px;flex:1;
 }
 .ctrl-btn{
   width:2.17em;aspect-ratio:1;border-radius:50%;
-  border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);
+  border:1px solid var(--c-btn-border);background:var(--c-btn-bg);
   color:var(--text,#fff);font-size:1.33em;cursor:pointer;outline:none;
   display:flex;align-items:center;justify-content:center;
   transition:background .15s,transform .1s;
 }
-.ctrl-btn:hover{background:rgba(255,255,255,.16)}
+.ctrl-btn:hover{background:var(--c-hover)}
 .ctrl-btn:active{transform:scale(.88)}
 .ctrl-val{font-size:1.25em;font-weight:300;min-width:3.17em;text-align:center}
+/* ── Slider ─────────────────────────────────────── */
+.ctrl-slider{
+  width:100%;-webkit-appearance:none;appearance:none;
+  height:0.35em;border-radius:0.25em;outline:none;cursor:pointer;
+  border:1px solid var(--c-ui-border);
+}
+#pos-slider{background:linear-gradient(to right,var(--accent,#2196F3) 0%,var(--accent,#2196F3) var(--pos-fill,0%),var(--c-ui-bg) var(--pos-fill,0%),var(--c-ui-bg) 100%)}
+#slat-slider{background:linear-gradient(to right,var(--accent,#2196F3) 0%,var(--accent,#2196F3) var(--slat-fill,0%),var(--c-ui-bg) var(--slat-fill,0%),var(--c-ui-bg) 100%)}
+.ctrl-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;width:0.9em;height:0.9em;border-radius:50%;
+  background:var(--text,#fff);border:2px solid var(--accent,#2196F3);
+  cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.3);
+}
 </style>
 
 <div id="tile" class="tile">
@@ -80,7 +104,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 
   <!-- Shutter visual -->
   <div class="shutter-wrap">
-    <svg class="shutter-svg" viewBox="0 0 120 96">
+    <svg class="shutter-svg" viewBox="0 0 120 96" preserveAspectRatio="xMidYMid meet">
       <defs>
         <clipPath id="blind-clip">
           <rect id="blind-clip-rect" x="10" y="5" width="100" height="0"/>
@@ -102,9 +126,9 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
       </g>
       <!-- Window frame -->
       <rect x="10" y="5" width="100" height="82" rx="3"
-            fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+            fill="none" style="stroke:var(--c-border)" stroke-width="1.5"/>
       <!-- Bottom sill -->
-      <rect x="4" y="86" width="112" height="5" rx="2.5" fill="rgba(255,255,255,0.15)"/>
+      <rect x="4" y="86" width="112" height="5" rx="2.5" style="fill:var(--c-sill)"/>
     </svg>
   </div>
 
@@ -116,18 +140,28 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 
   <!-- Position Feinsteuerung -->
   <div class="ctrl-row" id="pos-row" style="display:none">
-    <span class="ctrl-label">Position</span>
-    <button class="ctrl-btn" onclick="adjustPos(-1)">&#8722;</button>
-    <div class="ctrl-val" id="pos-val">--%</div>
-    <button class="ctrl-btn" onclick="adjustPos(1)">&#43;</button>
+    <div class="ctrl-top">
+      <span class="ctrl-label">Position</span>
+      <button class="ctrl-btn" onclick="adjustPos(-1)">&#8722;</button>
+      <div class="ctrl-val" id="pos-val">--%</div>
+      <button class="ctrl-btn" onclick="adjustPos(1)">&#43;</button>
+    </div>
+    <input type="range" class="ctrl-slider" id="pos-slider"
+           min="0" max="100" step="1" value="0"
+           oninput="onPosInput(this.value)" onchange="sendPos(this.value)">
   </div>
 
   <!-- Lamellen Feinsteuerung -->
   <div class="ctrl-row" id="slat-row" style="display:none">
-    <span class="ctrl-label">Lamellen</span>
-    <button class="ctrl-btn" onclick="adjustSlats(-1)">&#8722;</button>
-    <div class="ctrl-val" id="slat-val">--%</div>
-    <button class="ctrl-btn" onclick="adjustSlats(1)">&#43;</button>
+    <div class="ctrl-top">
+      <span class="ctrl-label">Lamellen</span>
+      <button class="ctrl-btn" onclick="adjustSlats(-1)">&#8722;</button>
+      <div class="ctrl-val" id="slat-val">--%</div>
+      <button class="ctrl-btn" onclick="adjustSlats(1)">&#43;</button>
+    </div>
+    <input type="range" class="ctrl-slider" id="slat-slider"
+           min="0" max="100" step="1" value="0"
+           oninput="onSlatInput(this.value)" onchange="sendSlat(this.value)">
   </div>
 
 </div>
@@ -159,9 +193,6 @@ function handleMessage(jsonStr) {
   var g = (accentInt >>  8) & 0xff;
   var b =  accentInt        & 0xff;
   var tile = document.getElementById("tile");
-  tile.style.setProperty('--bg',        intToHex(colors.bg      || 1843237));
-  tile.style.setProperty('--text',      intToHex(colors.text    || 16777215));
-  tile.style.setProperty('--text-sub',  intToHex(colors.textSub || 9214891));
   tile.style.setProperty('--accent',    intToHex(accentInt));
   tile.style.setProperty('--accent-bg', 'rgba(' + r + ',' + g + ',' + b + ',.15)');
 
@@ -173,6 +204,10 @@ function handleMessage(jsonStr) {
     document.getElementById("pos-val").textContent = d.position + "%";
     posRow.style.removeProperty("display");
     setShutterPos(d.position);
+    var ps = document.getElementById("pos-slider");
+    ps.min = _config.min; ps.max = _config.max; ps.step = _config.step;
+    ps.value = d.position;
+    _updateSliderFill("--pos-fill", d.position);
   } else {
     posRow.style.display = "none";
     setShutterPos(0);
@@ -183,38 +218,53 @@ function handleMessage(jsonStr) {
     _currentSlats = d.slats;
     document.getElementById("slat-val").textContent = d.slats + "%";
     slatRow.style.removeProperty("display");
+    var ss = document.getElementById("slat-slider");
+    ss.min = _config.min; ss.max = _config.max; ss.step = _config.step;
+    ss.value = d.slats;
+    _updateSliderFill("--slat-fill", d.slats);
   } else {
     slatRow.style.display = "none";
   }
 }
 
 function setShutterPos(pos) {
-  // 0 = open (no fill), 100 = closed (full fill); inner height = 82
-  document.getElementById("blind-clip-rect").setAttribute("height", (pos / 100 * 82).toFixed(1));
+  // min = open (no fill), max = closed (full fill); inner height = 82
+  var lo = _config.min != null ? _config.min : 0;
+  var hi = _config.max != null ? _config.max : 100;
+  var pct = hi > lo ? (pos - lo) / (hi - lo) : 0;
+  document.getElementById("blind-clip-rect").setAttribute("height", (pct * 82).toFixed(1));
 }
 
 function sendOpen() {
-  _setPos(_config.openValue);
-  if (typeof requestAction !== 'undefined') requestAction("SetPosition", _config.openValue);
+  var v = _config.min != null ? _config.min : 0;
+  _setPos(v);
+  if (typeof requestAction !== 'undefined') requestAction("SetPosition", v);
 }
 
 function sendClose() {
-  _setPos(_config.closeValue);
-  if (typeof requestAction !== 'undefined') requestAction("SetPosition", _config.closeValue);
+  var v = _config.max != null ? _config.max : 100;
+  _setPos(v);
+  if (typeof requestAction !== 'undefined') requestAction("SetPosition", v);
 }
 
 function adjustPos(dir) {
   if (_currentPos === null) return;
-  var next = Math.max(0, Math.min(100, _currentPos + dir * _config.step));
+  var lo = _config.min != null ? _config.min : 0;
+  var hi = _config.max != null ? _config.max : 100;
+  var next = Math.max(lo, Math.min(hi, _currentPos + dir * _config.step));
   _setPos(next);
   if (typeof requestAction !== 'undefined') requestAction("SetPosition", next);
 }
 
 function adjustSlats(dir) {
   if (_currentSlats === null) return;
-  var next = Math.max(0, Math.min(100, _currentSlats + dir * _config.step));
+  var lo = _config.min != null ? _config.min : 0;
+  var hi = _config.max != null ? _config.max : 100;
+  var next = Math.max(lo, Math.min(hi, _currentSlats + dir * _config.step));
   _currentSlats = next;
   document.getElementById("slat-val").textContent = next + "%";
+  var ss = document.getElementById("slat-slider");
+  if (ss) { ss.value = next; _updateSliderFill("--slat-fill", next); }
   if (typeof requestAction !== 'undefined') requestAction("SetSlats", next);
 }
 
@@ -222,13 +272,45 @@ function _setPos(val) {
   _currentPos = val;
   document.getElementById("pos-val").textContent = val + "%";
   setShutterPos(val);
+  var ps = document.getElementById("pos-slider");
+  if (ps) { ps.value = val; _updateSliderFill("--pos-fill", val); }
+}
+
+function _updateSliderFill(varName, val) {
+  var lo = _config.min != null ? _config.min : 0;
+  var hi = _config.max != null ? _config.max : 100;
+  var pct = hi > lo ? ((val - lo) / (hi - lo) * 100) : 0;
+  document.getElementById("tile").style.setProperty(varName, pct.toFixed(1) + "%");
+}
+
+function onPosInput(val) {
+  val = parseFloat(val);
+  _currentPos = val;
+  document.getElementById("pos-val").textContent = val + "%";
+  setShutterPos(val);
+  _updateSliderFill("--pos-fill", val);
+}
+
+function sendPos(val) {
+  if (typeof requestAction !== 'undefined') requestAction("SetPosition", parseFloat(val));
+}
+
+function onSlatInput(val) {
+  val = parseFloat(val);
+  _currentSlats = val;
+  document.getElementById("slat-val").textContent = val + "%";
+  _updateSliderFill("--slat-fill", val);
+}
+
+function sendSlat(val) {
+  if (typeof requestAction !== 'undefined') requestAction("SetSlats", parseFloat(val));
 }
 
 if (typeof requestAction === 'undefined') {
-  _config = {openValue: 0, closeValue: 100, step: 10};
+  _config = {min: 0, max: 100, step: 10};
   handleMessage(JSON.stringify({
     name: 'Wohnzimmer Rollo', position: 65, slats: 30,
-    colors: {bg: 1843237, text: 16777215, textSub: 9214891, accent: 2201331}
+    colors: {accent: 2201331}
   }));
 }
 </script>

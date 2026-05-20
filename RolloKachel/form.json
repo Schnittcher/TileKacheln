@@ -20,7 +20,8 @@
             "type": "SelectVariable",
             "caption": "Position (0–100 %)",
             "validVariableTypes": [
-                1
+                1,
+                2
             ],
             "value": 0
         },
@@ -29,74 +30,10 @@
             "type": "SelectVariable",
             "caption": "Lamellen / Slats (optional)",
             "validVariableTypes": [
-                1
+                1,
+                2
             ],
             "value": 0
-        },
-        {
-            "type": "Label",
-            "bold": true,
-            "caption": "Steuerung"
-        },
-        {
-            "type": "RowLayout",
-            "items": [
-                {
-                    "name": "OpenValue",
-                    "type": "NumberSpinner",
-                    "caption": "Wert für Auf",
-                    "suffix": "%",
-                    "minimum": 0,
-                    "maximum": 100,
-                    "value": 0
-                },
-                {
-                    "name": "CloseValue",
-                    "type": "NumberSpinner",
-                    "caption": "Wert für Zu",
-                    "suffix": "%",
-                    "minimum": 0,
-                    "maximum": 100,
-                    "value": 100
-                },
-                {
-                    "name": "PositionStep",
-                    "type": "NumberSpinner",
-                    "caption": "Schrittweite",
-                    "suffix": "%",
-                    "minimum": 1,
-                    "maximum": 50,
-                    "value": 10
-                }
-            ]
-        },
-        {
-            "type": "Label",
-            "bold": true,
-            "caption": "Allgemeine Farben"
-        },
-        {
-            "type": "RowLayout",
-            "items": [
-                {
-                    "name": "ColorBackground",
-                    "type": "SelectColor",
-                    "caption": "Hintergrund",
-                    "value": 1843237
-                },
-                {
-                    "name": "ColorText",
-                    "type": "SelectColor",
-                    "caption": "Text",
-                    "value": 16777215
-                },
-                {
-                    "name": "ColorTextSub",
-                    "type": "SelectColor",
-                    "caption": "Sekundärtext",
-                    "value": 9214891
-                }
-            ]
         },
         {
             "type": "Label",

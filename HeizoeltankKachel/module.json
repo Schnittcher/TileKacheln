@@ -1,0 +1,14 @@
+{
+    "id": "{B2C3D4E5-F6A7-8B9C-0D1E-2F3A4B5C6D7E}",
+    "parentRequirements": [],
+    "childRequirements": [],
+    "implemented": [],
+    "aliases": [
+        "Heizöltank Kachel"
+    ],
+    "name": "HeizoeltankKachel",
+    "type": 3,
+    "vendor": "",
+    "prefix": "HTK",
+    "url": ""
+}

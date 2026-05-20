@@ -87,34 +87,6 @@
         {
             "type": "Label",
             "bold": true,
-            "caption": "Allgemeine Farben"
-        },
-        {
-            "type": "RowLayout",
-            "items": [
-                {
-                    "name": "ColorBackground",
-                    "type": "SelectColor",
-                    "caption": "Hintergrund",
-                    "value": 1843237
-                },
-                {
-                    "name": "ColorText",
-                    "type": "SelectColor",
-                    "caption": "Text",
-                    "value": 16777215
-                },
-                {
-                    "name": "ColorTextSub",
-                    "type": "SelectColor",
-                    "caption": "Sekundärtext",
-                    "value": 9214891
-                }
-            ]
-        },
-        {
-            "type": "Label",
-            "bold": true,
             "caption": "Akzentfarbe"
         },
         {

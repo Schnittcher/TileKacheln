@@ -1,7 +1,15 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
-:root{--tile-padding:0px}
+:root{
+  --text:         var(--content-color,#fff);
+  --text-sub:     color-mix(in srgb,var(--content-color,#fff) 55%,transparent);
+  --c-ui-bg:      color-mix(in srgb,var(--content-color,#fff)  5%,transparent);
+  --c-ui-border:  color-mix(in srgb,var(--content-color,#fff)  8%,transparent);
+  --c-btn-bg:     color-mix(in srgb,var(--content-color,#fff)  6%,transparent);
+  --c-btn-border: color-mix(in srgb,var(--content-color,#fff) 13%,transparent);
+  --c-hover:      color-mix(in srgb,var(--content-color,#fff) 14%,transparent);
+}
 
 .tile{
   width:100%;
@@ -115,18 +123,18 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 }
 .setpoint-control{
   display:flex;align-items:center;justify-content:center;gap:0.75em;
-  padding:0.42em 0.67em;background:rgba(255,255,255,.04);
-  border-radius:0.67em;border:1px solid rgba(255,255,255,.06);
+  padding:0.42em 0.67em;background:var(--c-ui-bg);
+  border-radius:0.67em;border:1px solid var(--c-ui-border);
   margin-bottom:0.5em;
 }
 .sp-btn{
   width:2em;aspect-ratio:1;border-radius:50%;
-  border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);
+  border:1px solid var(--c-btn-border);background:var(--c-btn-bg);
   color:var(--text,#fff);font-size:1.33em;cursor:pointer;outline:none;
   display:flex;align-items:center;justify-content:center;
   transition:background .15s,transform .1s;
 }
-.sp-btn:hover{background:rgba(255,255,255,.16)}
+.sp-btn:hover{background:var(--c-hover)}
 .sp-btn:active{transform:scale(.88)}
 .sp-val{font-size:1.67em;font-weight:300;min-width:3em;text-align:center}
 
@@ -134,14 +142,14 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 .toggle-row{display:flex;gap:0.5em}
 .toggle-btn{
   flex:1;padding:0.5em 0.33em;border-radius:0.67em;
-  border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);
+  border:1px solid var(--c-ui-border);background:var(--c-ui-bg);
   color:var(--text-sub,#8C9BAB);font-size:0.92em;cursor:pointer;
   transition:all .15s;outline:none;
   display:flex;flex-direction:column;align-items:center;gap:0.25em;
   line-height:1;
 }
 .toggle-btn .t-icon{font-size:1.17em}
-.toggle-btn:hover{background:rgba(255,255,255,.1)}
+.toggle-btn:hover{background:var(--c-hover)}
 .toggle-btn:active{transform:scale(.94)}
 .toggle-btn.on{
   border-color:var(--btn-color,var(--accent));
@@ -261,9 +269,6 @@ function handleMessage(jsonStr){
   var b=accentInt&0xff;
 
   var tile=document.getElementById('tile');
-  tile.style.setProperty('--bg',          intToHex(colors.bg      ||1843237));
-  tile.style.setProperty('--text',        intToHex(colors.text    ||16777215));
-  tile.style.setProperty('--text-sub',    intToHex(colors.textSub ||9214891));
   tile.style.setProperty('--accent',      intToHex(accentInt));
   tile.style.setProperty('--accent-bg',   'rgba('+r+','+g+','+b+',.15)');
   tile.style.setProperty('--water-bg',    'rgba('+r+','+g+','+b+',.07)');
@@ -359,8 +364,7 @@ if(typeof requestAction==='undefined'){
     name:'Whirlpool', currentTemp:38.5, targetTemp:39.0,
     bubblesOn:true, pumpOn:true, heatingOn:false,
     config:{min:20, max:42, step:0.5},
-    colors:{bg:1843237, text:16777215, textSub:9214891, accent:46296,
-            bubbles:46296, pump:2201331, heating:16739072}
+    colors:{accent:46296, bubbles:46296, pump:2201331, heating:16739072}
   }));
 }
 </script>

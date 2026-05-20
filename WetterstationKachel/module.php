@@ -14,9 +14,6 @@ class WetterstationKachel extends IPSModule
         $this->RegisterPropertyInteger('RainID',          0);
         $this->RegisterPropertyInteger('PressureID',      0);
         $this->RegisterPropertyInteger('UVIndexID',       0);
-        $this->RegisterPropertyInteger('ColorBackground', 1843237);
-        $this->RegisterPropertyInteger('ColorText',       16777215);
-        $this->RegisterPropertyInteger('ColorTextSub',    9214891);
         $this->RegisterPropertyInteger('ColorAccent',     2733814);
 
         $this->SetVisualizationType(1);
@@ -119,9 +116,6 @@ class WetterstationKachel extends IPSModule
             'pressure'     => $this->getVarData($this->ReadPropertyInteger('PressureID')),
             'uvIndex'      => $this->getVarData($this->ReadPropertyInteger('UVIndexID')),
             'colors'       => [
-                'bg'      => $this->ReadPropertyInteger('ColorBackground'),
-                'text'    => $this->ReadPropertyInteger('ColorText'),
-                'textSub' => $this->ReadPropertyInteger('ColorTextSub'),
                 'accent'  => $this->ReadPropertyInteger('ColorAccent'),
             ],
         ];

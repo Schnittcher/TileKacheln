@@ -1,0 +1,42 @@
+{
+    "elements": [
+        {
+            "name": "TileName",
+            "type": "ValidationTextBox",
+            "caption": "Name der Kachel",
+            "value": "Heizöltank"
+        },
+        {
+            "type": "Label",
+            "bold": true,
+            "caption": "Variable"
+        },
+        {
+            "name": "FillLevelID",
+            "type": "SelectVariable",
+            "caption": "Füllstand",
+            "validVariableTypes": [
+                1,
+                2
+            ],
+            "value": 0
+        },
+        {
+            "type": "Label",
+            "bold": true,
+            "caption": "Akzentfarbe"
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "name": "ColorAccent",
+                    "type": "SelectColor",
+                    "caption": "Akzent",
+                    "value": 14710784
+                }
+            ]
+        }
+    ],
+    "actions": []
+}

@@ -1,7 +1,17 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
-:root{--tile-padding:0px}
+:root{
+  --text:         var(--content-color,#fff);
+  --text-sub:     color-mix(in srgb,var(--content-color,#fff) 55%,transparent);
+  --c-border:     color-mix(in srgb,var(--content-color,#fff) 20%,transparent);
+  --c-bg:         color-mix(in srgb,var(--content-color,#fff)  7%,transparent);
+  --c-ui-bg:      color-mix(in srgb,var(--content-color,#fff)  5%,transparent);
+  --c-ui-border:  color-mix(in srgb,var(--content-color,#fff)  8%,transparent);
+  --c-btn-bg:     color-mix(in srgb,var(--content-color,#fff)  6%,transparent);
+  --c-btn-border: color-mix(in srgb,var(--content-color,#fff) 13%,transparent);
+  --c-hover:      color-mix(in srgb,var(--content-color,#fff) 14%,transparent);
+}
 
 .tile{
   font-size:12px;
@@ -33,7 +43,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 
 .dark-temp-display{
   text-align:center;margin:0.25em 0 0.5em;
-  flex:1;min-height:0;overflow:hidden;
+  flex:1;min-height:0;overflow:visible;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
 }
 .dark-current-temp{font-size:var(--temp-size,4em);font-weight:200;line-height:1.1;letter-spacing:-0.05em;white-space:nowrap;}
@@ -49,28 +59,65 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 }
 .setpoint-control{
   display:flex;align-items:center;justify-content:center;gap:0.75em;
-  padding:0.42em 0.67em;background:rgba(255,255,255,.04);
-  border-radius:0.67em;border:1px solid rgba(255,255,255,.06);
+  padding:0.42em 0.67em;background:var(--c-ui-bg);
+  border-radius:0.67em;border:1px solid var(--c-ui-border);
 }
 .sp-btn{
   width:2em;aspect-ratio:1;border-radius:50%;
-  border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);
+  border:1px solid var(--c-btn-border);background:var(--c-btn-bg);
   color:var(--text,#fff);font-size:1.33em;line-height:1;cursor:pointer;
   transition:background .15s,transform .1s;outline:none;
   display:flex;align-items:center;justify-content:center;
 }
-.sp-btn:hover{background:rgba(255,255,255,.16)}
+.sp-btn:hover{background:var(--c-hover)}
 .sp-btn:active{transform:scale(.88)}
 .sp-val{font-size:1.67em;font-weight:300;min-width:3em;text-align:center}
+
+/* ── Ventilposition ─────────────────────────────────── */
+.valve-row{
+  display:flex;align-items:center;gap:0.5em;
+  margin-top:0.42em;
+}
+.valve-label{
+  font-size:0.85em;color:var(--text-sub,#8C9BAB);
+  white-space:nowrap;flex-shrink:0;width:3em;
+}
+.valve-slider{
+  flex:1;-webkit-appearance:none;appearance:none;
+  height:0.4em;border-radius:0.25em;outline:none;cursor:pointer;
+  background:linear-gradient(to right,
+    var(--accent,#444) 0%,
+    var(--accent,#444) var(--vp,0%),
+    var(--c-ui-bg) var(--vp,0%),
+    var(--c-ui-bg) 100%);
+  border:1px solid var(--c-ui-border);
+}
+.valve-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:1em;height:1em;border-radius:50%;
+  background:var(--text,#fff);
+  border:2px solid var(--accent,#444);
+  cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.3);
+}
+.valve-slider::-moz-range-thumb{
+  width:1em;height:1em;border-radius:50%;
+  background:var(--text,#fff);
+  border:2px solid var(--accent,#444);
+  cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.3);
+}
+.valve-pct{
+  font-size:0.92em;font-weight:300;
+  white-space:nowrap;flex-shrink:0;min-width:2.5em;text-align:right;
+}
 
 .mode-buttons{display:flex;gap:0.33em;margin-top:0.5em;justify-content:center;flex-wrap:wrap}
 .mode-btn{
   padding:0.42em 0.75em;border-radius:0.5em;
-  border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);
+  border:1px solid var(--c-ui-border);background:var(--c-ui-bg);
   color:var(--text-sub,#8C9BAB);font-size:1em;cursor:pointer;
   transition:all .15s;outline:none;
 }
-.mode-btn:hover{background:rgba(255,255,255,.12);color:var(--text,#fff)}
+.mode-btn:hover{background:var(--c-hover);color:var(--text,#fff)}
 .mode-btn.active{
   border-color:var(--accent);color:var(--accent-fg);background:var(--accent-bg);
 }
@@ -100,6 +147,15 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
     </div>
   </div>
 
+  <div id="valve-row" class="valve-row" style="display:none">
+    <span class="valve-label">Ventil</span>
+    <input type="range" class="valve-slider" id="valve-slider"
+           min="0" max="100" step="1" value="0"
+           oninput="onValveInput(this.value)"
+           onchange="sendValve(this.value)">
+    <span class="valve-pct" id="valve-pct">0%</span>
+  </div>
+
   <div class="mode-buttons" id="mode-buttons"></div>
 
 </div>
@@ -123,8 +179,10 @@ var _config = {min: 5, max: 30, step: 0.5};
     var disp=document.getElementById('temp-display-area');
     if(disp){
       var dh=disp.offsetHeight;
-      // Ziel: Temperatur füllt ~55% der Containerhöhe, mind. 2em, max. 8em
-      var tempPx=Math.max(base*2, Math.min(base*6, dh*0.42));
+      // Abzug für Humidity-Zeile (wenn sichtbar)
+      var hum=document.getElementById('humidity');
+      if(hum&&hum.style.display!=='none') dh=Math.max(0,dh-hum.offsetHeight-6);
+      var tempPx=Math.max(base*2, Math.min(base*5.5, dh*0.55));
       t.style.setProperty('--temp-size', (tempPx/base).toFixed(3)+'em');
     }
   }).observe(t);
@@ -162,9 +220,6 @@ function handleMessage(jsonStr) {
   applyAccent(colorMap[modeClass] || 12303291);
 
   var tile = document.getElementById("tile");
-  tile.style.setProperty('--bg',       intToHex(colors.bg      || 1843237));
-  tile.style.setProperty('--text',     intToHex(colors.text    || 16777215));
-  tile.style.setProperty('--text-sub', intToHex(colors.textSub || 9214891));
 
   // Config übernehmen (Sollwert-Grenzen)
   if (d.config) {
@@ -196,7 +251,32 @@ document.getElementById("current-temp").textContent =
     spWrap.style.display = "none";
   }
 
+  var valveRow = document.getElementById("valve-row");
+  if (d.valvePosition !== null && d.valvePosition !== undefined) {
+    var vp = Math.max(0, Math.min(100, Math.round(d.valvePosition)));
+    setValveDisplay(vp);
+    valveRow.style.removeProperty("display");
+  } else {
+    valveRow.style.display = "none";
+  }
+
   updateModeButtons(d);
+}
+
+function setValveDisplay(vp) {
+  document.getElementById("valve-slider").value = vp;
+  document.getElementById("valve-pct").textContent = vp + "%";
+  document.getElementById("tile").style.setProperty("--vp", vp + "%");
+}
+
+function onValveInput(val) {
+  var vp = Math.round(val);
+  document.getElementById("valve-pct").textContent = vp + "%";
+  document.getElementById("tile").style.setProperty("--vp", vp + "%");
+}
+
+function sendValve(val) {
+  if (typeof requestAction !== "undefined") requestAction("SetValvePosition", Math.round(val));
 }
 
 function adjustTemp(dir) {
@@ -238,14 +318,14 @@ function classifyMode(mode) {
 if (typeof requestAction === 'undefined') {
   handleMessage(JSON.stringify({
     name: 'Thermostat', currentTemp: 21.5, targetTemp: 22.0, humidity: 48,
+    valvePosition: 42,
     hvacMode: 'heat',
     modeOptions: [
       {value: 'heat', label: 'Heizen'}, {value: 'cool', label: 'Kühlen'},
       {value: 'auto', label: 'Auto'},   {value: 'off',  label: 'Aus'}
     ],
     config: {min: 5, max: 30, step: 0.5},
-    colors: {heat: 16739072, cool: 2201331, auto: 5025616, off: 10066329,
-             bg: 1843237, text: 16777215, textSub: 9214891}
+    colors: {heat: 16739072, cool: 2201331, auto: 5025616, off: 10066329}
   }));
 }
 </script>

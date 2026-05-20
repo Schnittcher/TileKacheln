@@ -38,6 +38,17 @@
             "type": "SelectVariable",
             "caption": "Luftfeuchtigkeit (optional)",
             "validVariableTypes": [
+                1,
+                2
+            ],
+            "value": 0
+        },
+        {
+            "name": "ValvePositionID",
+            "type": "SelectVariable",
+            "caption": "Ventilposition 0–100 % (optional)",
+            "validVariableTypes": [
+                1,
                 2
             ],
             "value": 0
@@ -51,34 +62,6 @@
                 3
             ],
             "value": 0
-        },
-        {
-            "type": "Label",
-            "bold": true,
-            "caption": "Allgemeine Farben"
-        },
-        {
-            "type": "RowLayout",
-            "items": [
-                {
-                    "name": "ColorBackground",
-                    "type": "SelectColor",
-                    "caption": "Hintergrund",
-                    "value": 1843237
-                },
-                {
-                    "name": "ColorText",
-                    "type": "SelectColor",
-                    "caption": "Text",
-                    "value": 16777215
-                },
-                {
-                    "name": "ColorTextSub",
-                    "type": "SelectColor",
-                    "caption": "Sekundärtext",
-                    "value": 9214891
-                }
-            ]
         },
         {
             "type": "Label",

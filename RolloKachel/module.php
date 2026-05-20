@@ -9,12 +9,6 @@ class RolloKachel extends IPSModule
         $this->RegisterPropertyString('TileName', 'Rollo');
         $this->RegisterPropertyInteger('PositionID', 0);
         $this->RegisterPropertyInteger('SlatsID', 0);
-        $this->RegisterPropertyInteger('OpenValue', 0);
-        $this->RegisterPropertyInteger('CloseValue', 100);
-        $this->RegisterPropertyInteger('PositionStep', 10);
-        $this->RegisterPropertyInteger('ColorBackground', 1843237);
-        $this->RegisterPropertyInteger('ColorText', 16777215);
-        $this->RegisterPropertyInteger('ColorTextSub', 9214891);
         $this->RegisterPropertyInteger('ColorAccent', 2201331);
 
         $this->SetVisualizationType(1);
@@ -60,14 +54,24 @@ class RolloKachel extends IPSModule
             case 'SetPosition':
                 $varID = $this->ReadPropertyInteger('PositionID');
                 if ($varID > 0 && IPS_VariableExists($varID)) {
-                    RequestAction($varID, max(0, min(100, (int) $Value)));
+                    $cfg = $this->GetVarConfig($varID);
+                    $var = IPS_GetVariable($varID);
+                    $val = $var['VariableType'] === 2
+                        ? (float) max($cfg['min'], min($cfg['max'], (float) $Value))
+                        : (int)   round(max($cfg['min'], min($cfg['max'], (float) $Value)));
+                    RequestAction($varID, $val);
                 }
                 break;
 
             case 'SetSlats':
                 $varID = $this->ReadPropertyInteger('SlatsID');
                 if ($varID > 0 && IPS_VariableExists($varID)) {
-                    RequestAction($varID, max(0, min(100, (int) $Value)));
+                    $cfg = $this->GetVarConfig($varID);
+                    $var = IPS_GetVariable($varID);
+                    $val = $var['VariableType'] === 2
+                        ? (float) max($cfg['min'], min($cfg['max'], (float) $Value))
+                        : (int)   round(max($cfg['min'], min($cfg['max'], (float) $Value)));
+                    RequestAction($varID, $val);
                 }
                 break;
         }
@@ -75,10 +79,12 @@ class RolloKachel extends IPSModule
 
     public function GetVisualizationTile()
     {
-        $configJson      = json_encode([
-            'openValue'  => $this->ReadPropertyInteger('OpenValue'),
-            'closeValue' => $this->ReadPropertyInteger('CloseValue'),
-            'step'       => $this->ReadPropertyInteger('PositionStep'),
+        $posCfg = $this->GetVarConfig($this->ReadPropertyInteger('PositionID'));
+
+        $configJson = json_encode([
+            'min'  => $posCfg['min'],
+            'max'  => $posCfg['max'],
+            'step' => $posCfg['step'],
         ]);
         $dataJsonLiteral = json_encode(json_encode($this->GetCurrentData()));
 
@@ -90,6 +96,48 @@ class RolloKachel extends IPSModule
 
     // ── Private ──────────────────────────────────────────────────────────────
 
+    private function GetVarConfig(int $varID, float $defaultMin = 0.0, float $defaultMax = 100.0, float $defaultStep = 1.0): array
+    {
+        $config = ['min' => $defaultMin, 'max' => $defaultMax, 'step' => $defaultStep];
+
+        if ($varID <= 0 || !IPS_VariableExists($varID)) {
+            return $config;
+        }
+
+        // Priorität 2: Variablen-Profil (Custom hat Vorrang)
+        $var         = IPS_GetVariable($varID);
+        $profileName = $var['VariableCustomProfile'] !== ''
+            ? $var['VariableCustomProfile']
+            : $var['VariableProfile'];
+
+        if ($profileName !== '' && IPS_VariableProfileExists($profileName)) {
+            $profile         = IPS_GetVariableProfile($profileName);
+            $config['min']   = (float) $profile['MinValue'];
+            $config['max']   = (float) $profile['MaxValue'];
+            if ($profile['StepSize'] > 0) {
+                $config['step'] = (float) $profile['StepSize'];
+            }
+        }
+
+        // Priorität 1: IPS 7 Variablen-Darstellung (höchste Priorität)
+        if (function_exists('IPS_GetVariablePresentation')) {
+            $pres = IPS_GetVariablePresentation($varID);
+            if (is_array($pres)) {
+                if (isset($pres['MinValue']) && $pres['MinValue'] !== null) {
+                    $config['min']  = (float) $pres['MinValue'];
+                }
+                if (isset($pres['MaxValue']) && $pres['MaxValue'] !== null) {
+                    $config['max']  = (float) $pres['MaxValue'];
+                }
+                if (isset($pres['StepSize']) && $pres['StepSize'] > 0) {
+                    $config['step'] = (float) $pres['StepSize'];
+                }
+            }
+        }
+
+        return $config;
+    }
+
     private function GetCurrentData(): array
     {
         $data = [
@@ -97,21 +145,24 @@ class RolloKachel extends IPSModule
             'position' => null,
             'slats'    => null,
             'colors'   => [
-                'bg'      => $this->ReadPropertyInteger('ColorBackground'),
-                'text'    => $this->ReadPropertyInteger('ColorText'),
-                'textSub' => $this->ReadPropertyInteger('ColorTextSub'),
                 'accent'  => $this->ReadPropertyInteger('ColorAccent'),
             ],
         ];
 
         $positionID = $this->ReadPropertyInteger('PositionID');
         if ($positionID > 0 && IPS_VariableExists($positionID)) {
-            $data['position'] = (int) GetValue($positionID);
+            $var = IPS_GetVariable($positionID);
+            $data['position'] = $var['VariableType'] === 2
+                ? round((float) GetValue($positionID), 1)
+                : (int) GetValue($positionID);
         }
 
         $slatsID = $this->ReadPropertyInteger('SlatsID');
         if ($slatsID > 0 && IPS_VariableExists($slatsID)) {
-            $data['slats'] = (int) GetValue($slatsID);
+            $var = IPS_GetVariable($slatsID);
+            $data['slats'] = $var['VariableType'] === 2
+                ? round((float) GetValue($slatsID), 1)
+                : (int) GetValue($slatsID);
         }
 
         return $data;

@@ -1,0 +1,204 @@
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
+:root{
+  --text:        var(--content-color,#fff);
+  --text-sub:    color-mix(in srgb,var(--content-color,#fff) 55%,transparent);
+  --c-border:    color-mix(in srgb,var(--content-color,#fff) 20%,transparent);
+  --c-bg:        color-mix(in srgb,var(--content-color,#fff)  7%,transparent);
+  --c-detail:    color-mix(in srgb,var(--content-color,#fff)  7%,transparent);
+  --c-minor:     color-mix(in srgb,var(--content-color,#fff)  6%,transparent);
+  --c-label-mid: color-mix(in srgb,var(--content-color,#fff) 45%,transparent);
+}
+
+.tile{
+  width:100%;
+  height:100%;
+  position:relative;
+  overflow:hidden;
+  font-size:12px;
+  background:transparent;
+  color:var(--text,#fff);
+  padding:1em 1em 0.75em;
+  box-shadow:0 4px 20px rgba(0,0,0,.45);
+  display:flex;
+  flex-direction:column;
+}
+.tile::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--accent,#E07800);transition:background .3s;
+}
+
+.header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:0.5em;gap:0.67em;
+}
+.tile-name{
+  font-size:1.08em;font-weight:500;color:var(--text-sub,#8C9BAB);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;
+}
+.storage-wrap{
+  flex:1;min-height:0;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:0.5em;
+}
+.storage-svg{display:block;width:100%;height:100%;}
+
+.value-display{
+  text-align:center;
+}
+.value-big{
+  font-size:1.67em;font-weight:300;letter-spacing:-0.03em;line-height:1.1;
+}
+.value-unit{
+  font-size:1em;font-weight:400;color:var(--text-sub,#8C9BAB);
+  margin-left:0.25em;
+}
+</style>
+
+<div id="tile" class="tile">
+
+  <div class="header">
+    <span class="tile-name" id="tile-name"></span>
+  </div>
+
+  <div class="storage-wrap">
+    <!-- Heizöltank: liegender Zylinder (Querschnitt) -->
+    <svg class="storage-svg" viewBox="0 0 100 88" id="storage-svg">
+      <defs>
+        <!-- Clip auf die Kapsel-Form des Tanks -->
+        <clipPath id="tank-clip">
+          <rect x="8" y="16" width="84" height="44" rx="22"/>
+        </clipPath>
+      </defs>
+
+      <!-- Tank-Körper Hintergrund (Kapsel) -->
+      <rect x="8" y="16" width="84" height="44" rx="22"
+            fill="rgba(0,0,0,0.45)"/>
+
+      <!-- Öl-Füllung (von unten, geclippt) -->
+      <rect id="tank-fill" x="8" y="60" width="84" height="0"
+            clip-path="url(#tank-clip)"
+            fill="rgba(180,105,5,0.82)"/>
+
+      <!-- Akzentlinie an der Füllgrenze (Oberfläche) -->
+      <rect id="tank-fill-top" x="8" y="60" width="84" height="0"
+            clip-path="url(#tank-clip)"
+            fill="var(--accent,#E07800)" opacity="0.6"/>
+
+      <!-- Tank-Umriss -->
+      <rect x="8" y="16" width="84" height="44" rx="22"
+            fill="none" style="stroke:var(--c-border)" stroke-width="1.5"/>
+
+      <!-- Ringspanten (vertikale Schweißnähte) -->
+      <line x1="31" y1="17" x2="31" y2="59" style="stroke:var(--c-detail)" stroke-width="0.9"/>
+      <line x1="50" y1="16" x2="50" y2="60" style="stroke:var(--c-detail)" stroke-width="0.9"/>
+      <line x1="69" y1="17" x2="69" y2="59" style="stroke:var(--c-detail)" stroke-width="0.9"/>
+
+      <!-- Oberer Glanzstreifen (Highlight) -->
+      <rect x="8" y="16" width="84" height="11" rx="5"
+            style="fill:var(--c-bg)" clip-path="url(#tank-clip)"/>
+
+      <!-- Stützfüße -->
+      <rect x="22" y="59" width="8" height="15" rx="2"
+            style="fill:var(--c-minor);stroke:var(--c-border)" stroke-width="1.1"/>
+      <rect x="70" y="59" width="8" height="15" rx="2"
+            style="fill:var(--c-minor);stroke:var(--c-border)" stroke-width="1.1"/>
+      <!-- Bodenplatte -->
+      <rect x="18" y="72" width="64" height="3" rx="1.5"
+            style="fill:var(--c-minor);stroke:var(--c-detail)" stroke-width="0.8"/>
+
+      <!-- Einfüllstutzen oben -->
+      <rect x="43" y="8" width="14" height="10" rx="3"
+            style="fill:var(--c-detail);stroke:var(--c-border)" stroke-width="1"/>
+      <line x1="50" y1="8" x2="50" y2="16" style="stroke:var(--c-detail)" stroke-width="0.7"/>
+
+      <!-- Entlüftungsrohr oben links -->
+      <rect x="28" y="7" width="5" height="11" rx="1.5"
+            style="fill:var(--c-bg);stroke:var(--c-minor)" stroke-width="0.9"/>
+
+      <!-- Entnahmerohr unten rechts -->
+      <rect x="63" y="59" width="8" height="7" rx="1.5"
+            style="fill:var(--c-minor);stroke:var(--c-minor)" stroke-width="0.9"/>
+
+      <!-- Prozentzahl im Tank -->
+      <text id="tank-pct-text" x="50" y="40" text-anchor="middle"
+            dominant-baseline="middle"
+            font-size="12" style="fill:var(--c-label-mid)"
+            font-family="sans-serif">--%</text>
+    </svg>
+  </div>
+
+  <div class="value-display" id="value-display" style="display:none">
+    <span class="value-big" id="value-big">--</span><span class="value-unit" id="value-unit"></span>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  if(typeof ResizeObserver==='undefined')return;
+  var t=document.getElementById('tile');
+  new ResizeObserver(function(e){
+    var bs=e[0].borderBoxSize&&e[0].borderBoxSize[0];
+    var w=bs?bs.inlineSize:t.offsetWidth;
+    var h=bs?bs.blockSize:t.offsetHeight;
+    t.style.fontSize=Math.max(10,Math.min(20,Math.min(w,h)/17.5)).toFixed(2)+'px';
+  }).observe(t);
+})();
+
+function intToHex(n){
+  return '#'+('000000'+n.toString(16)).slice(-6);
+}
+
+function handleMessage(jsonStr){
+  var d=JSON.parse(jsonStr);
+  var colors=d.colors||{};
+  var accentInt=colors.accent||14710784;
+  var r=(accentInt>>16)&0xff;
+  var g=(accentInt>>8)&0xff;
+  var b= accentInt    &0xff;
+
+  var tile=document.getElementById('tile');
+  tile.style.setProperty('--accent',   intToHex(accentInt));
+  tile.style.setProperty('--accent-bg','rgba('+r+','+g+','+b+',.18)');
+
+  document.getElementById('tile-name').textContent=d.name||'';
+
+  if(d.pct!==null&&d.pct!==undefined){
+    setTankFill(d.pct);
+    document.getElementById('tank-pct-text').textContent=d.pct+'%';
+  } else {
+    setTankFill(0);
+    document.getElementById('tank-pct-text').textContent='--%';
+  }
+
+  var valueDisplay=document.getElementById('value-display');
+  if(d.value!==null&&d.value!==undefined){
+    document.getElementById('value-big').textContent=parseFloat(d.value).toFixed(d.digits||0);
+    document.getElementById('value-unit').textContent=d.suffix||'';
+    valueDisplay.style.removeProperty('display');
+  } else {
+    valueDisplay.style.display='none';
+  }
+}
+
+function setTankFill(pct){
+  // Tank-Innenraum: y=16, height=44 → Unterkante y=60
+  var bodyH=44, bodyBottom=60;
+  var fillH=(pct/100)*bodyH;
+  var fillY=bodyBottom-fillH;
+
+  document.getElementById('tank-fill').setAttribute('y',      fillY.toFixed(1));
+  document.getElementById('tank-fill').setAttribute('height', fillH.toFixed(1));
+  document.getElementById('tank-fill-top').setAttribute('y',      fillY.toFixed(1));
+  document.getElementById('tank-fill-top').setAttribute('height', Math.min(2, fillH).toFixed(1));
+}
+
+if(typeof requestAction==='undefined'){
+  handleMessage(JSON.stringify({
+    name:'Heizöltank', value:1850, suffix:'L', digits:0, pct:62,
+    colors:{accent:14710784}
+  }));
+}
+</script>

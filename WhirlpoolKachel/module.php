@@ -12,10 +12,7 @@ class WhirlpoolKachel extends IPSModule
         $this->RegisterPropertyInteger('BubblesID', 0);
         $this->RegisterPropertyInteger('PumpID', 0);
         $this->RegisterPropertyInteger('HeatingID', 0);
-$this->RegisterPropertyInteger('ColorBackground', 1843237);
-        $this->RegisterPropertyInteger('ColorText',       16777215);
-        $this->RegisterPropertyInteger('ColorTextSub',    9214891);
-        $this->RegisterPropertyInteger('ColorAccent',     46296);
+$this->RegisterPropertyInteger('ColorAccent',     46296);
         $this->RegisterPropertyInteger('ColorBubbles',    46296);
         $this->RegisterPropertyInteger('ColorPump',       2201331);
         $this->RegisterPropertyInteger('ColorHeating',    16739072);
@@ -153,9 +150,6 @@ $this->RegisterPropertyInteger('ColorBackground', 1843237);
             'pumpOn'      => null,
             'heatingOn'   => null,
             'colors'      => [
-                'bg'      => $this->ReadPropertyInteger('ColorBackground'),
-                'text'    => $this->ReadPropertyInteger('ColorText'),
-                'textSub' => $this->ReadPropertyInteger('ColorTextSub'),
                 'accent'  => $this->ReadPropertyInteger('ColorAccent'),
                 'bubbles' => $this->ReadPropertyInteger('ColorBubbles'),
                 'pump'    => $this->ReadPropertyInteger('ColorPump'),

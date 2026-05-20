@@ -1,0 +1,70 @@
+{
+    "elements": [
+        {
+            "name": "TileName",
+            "type": "ValidationTextBox",
+            "caption": "Name der Kachel",
+            "value": "Brauchwasser"
+        },
+        {
+            "type": "Label",
+            "bold": true,
+            "caption": "Variablen Verknüpfungen"
+        },
+        {
+            "type": "Label",
+            "caption": "Nicht benötigte Felder einfach leer lassen."
+        },
+        {
+            "name": "TempTopID",
+            "type": "SelectVariable",
+            "caption": "Temperatur oben (aktuell)",
+            "validVariableTypes": [2],
+            "value": 0
+        },
+        {
+            "name": "PumpID",
+            "type": "SelectVariable",
+            "caption": "Pumpenstatus (Ein/Aus)",
+            "validVariableTypes": [0, 1],
+            "value": 0
+        },
+        {
+            "name": "TempOnID",
+            "type": "SelectVariable",
+            "caption": "Ladetemperatur Ein-Schwelle",
+            "validVariableTypes": [2],
+            "value": 0
+        },
+        {
+            "name": "TempOffID",
+            "type": "SelectVariable",
+            "caption": "Ladetemperatur Aus-Schwelle",
+            "validVariableTypes": [2],
+            "value": 0
+        },
+        {
+            "type": "Label",
+            "bold": true,
+            "caption": "Akzent- & Statusfarben"
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "name": "ColorAccent",
+                    "type": "SelectColor",
+                    "caption": "Akzent",
+                    "value": 16724736
+                },
+                {
+                    "name": "ColorPumpOn",
+                    "type": "SelectColor",
+                    "caption": "Pumpe aktiv",
+                    "value": 2201331
+                }
+            ]
+        }
+    ],
+    "actions": []
+}

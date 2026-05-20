@@ -1,6 +1,15 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
+:root{
+  --text:        var(--content-color,#fff);
+  --text-sub:    color-mix(in srgb,var(--content-color,#fff) 55%,transparent);
+  --c-border:    color-mix(in srgb,var(--content-color,#fff) 20%,transparent);
+  --c-bg:        color-mix(in srgb,var(--content-color,#fff)  7%,transparent);
+  --c-detail:    color-mix(in srgb,var(--content-color,#fff)  7%,transparent);
+  --c-minor:     color-mix(in srgb,var(--content-color,#fff)  6%,transparent);
+  --c-label-mid: color-mix(in srgb,var(--content-color,#fff) 45%,transparent);
+}
 
 .tile{
   width:100%;
@@ -39,11 +48,11 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
   text-align:center;
 }
 .value-big{
-  font-size:3em;font-weight:200;letter-spacing:-0.08em;line-height:1.1;
+  font-size:1.67em;font-weight:300;letter-spacing:-0.03em;line-height:1.1;
 }
 .value-unit{
-  font-size:1.33em;font-weight:400;color:var(--text-sub,#8C9BAB);
-  margin-left:0.33em;
+  font-size:1em;font-weight:400;color:var(--text-sub,#8C9BAB);
+  margin-left:0.25em;
 }
 </style>
 
@@ -71,14 +80,13 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 
       <!-- ── Äußere Wände (Bunker / Lagerraum) ── -->
       <rect x="4" y="4" width="92" height="72" rx="3"
-            fill="rgba(255,255,255,0.05)"
-            stroke="rgba(255,255,255,0.22)" stroke-width="1.6"/>
+            style="fill:var(--c-bg);stroke:var(--c-border)" stroke-width="1.6"/>
 
       <!-- Wandstruktur-Details: horizontale Fugen links & rechts -->
-      <line x1="4"  y1="28" x2="11" y2="28" stroke="rgba(255,255,255,0.10)" stroke-width="0.8"/>
-      <line x1="4"  y1="52" x2="11" y2="52" stroke="rgba(255,255,255,0.10)" stroke-width="0.8"/>
-      <line x1="89" y1="28" x2="96" y2="28" stroke="rgba(255,255,255,0.10)" stroke-width="0.8"/>
-      <line x1="89" y1="52" x2="96" y2="52" stroke="rgba(255,255,255,0.10)" stroke-width="0.8"/>
+      <line x1="4"  y1="28" x2="11" y2="28" style="stroke:var(--c-detail)" stroke-width="0.8"/>
+      <line x1="4"  y1="52" x2="11" y2="52" style="stroke:var(--c-detail)" stroke-width="0.8"/>
+      <line x1="89" y1="28" x2="96" y2="28" style="stroke:var(--c-detail)" stroke-width="0.8"/>
+      <line x1="89" y1="52" x2="96" y2="52" style="stroke:var(--c-detail)" stroke-width="0.8"/>
 
       <!-- Innenraum: dunkler Hintergrund -->
       <rect x="11" y="10" width="78" height="66" fill="rgba(0,0,0,0.45)"/>
@@ -93,31 +101,31 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 
       <!-- Innenrahmen -->
       <rect x="11" y="10" width="78" height="66" fill="none"
-            stroke="rgba(255,255,255,0.10)" stroke-width="0.8"/>
+            style="stroke:var(--c-detail)" stroke-width="0.8"/>
 
       <!-- ── Trichterauslauf ── -->
       <polygon points="20,76 80,76 70,90 30,90"
                fill="rgba(0,0,0,0.50)"
-               stroke="rgba(255,255,255,0.16)" stroke-width="1.3"
+               style="stroke:var(--c-border)" stroke-width="1.3"
                stroke-linejoin="round"/>
 
       <!-- Auslaufrohr -->
       <rect x="37" y="90" width="26" height="8" rx="2"
-            fill="rgba(0,0,0,0.60)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+            fill="rgba(0,0,0,0.60)" style="stroke:var(--c-minor)" stroke-width="1"/>
       <!-- Rohrschlitz (Öffnung) -->
       <rect x="44" y="95" width="12" height="5" rx="1"
-            fill="rgba(0,0,0,0.75)" stroke="rgba(255,255,255,0.08)" stroke-width="0.6"/>
+            fill="rgba(0,0,0,0.75)" style="stroke:var(--c-detail)" stroke-width="0.6"/>
 
       <!-- ── Deckelluke oben (Befüllung) ── -->
       <rect x="38" y="4" width="24" height="7" rx="2"
-            fill="rgba(0,0,0,0.35)" stroke="rgba(255,255,255,0.18)" stroke-width="0.9"/>
+            fill="rgba(0,0,0,0.35)" style="stroke:var(--c-border)" stroke-width="0.9"/>
       <line x1="50" y1="4" x2="50" y2="11"
-            stroke="rgba(255,255,255,0.12)" stroke-width="0.7"/>
+            style="stroke:var(--c-detail)" stroke-width="0.7"/>
 
       <!-- ── Prozentzahl im Innenraum ── -->
       <text id="storage-pct-text" x="50" y="47" text-anchor="middle"
             dominant-baseline="middle"
-            font-size="13" fill="rgba(255,255,255,0.45)">--%</text>
+            font-size="13" style="fill:var(--c-label-mid)">--%</text>
     </svg>
   </div>
 
@@ -152,9 +160,6 @@ function handleMessage(jsonStr){
   var b= accentInt    &0xff;
 
   var tile=document.getElementById('tile');
-  tile.style.setProperty('--bg',       intToHex(colors.bg      ||1843237));
-  tile.style.setProperty('--text',     intToHex(colors.text    ||16777215));
-  tile.style.setProperty('--text-sub', intToHex(colors.textSub ||9214891));
   tile.style.setProperty('--accent',   intToHex(accentInt));
   tile.style.setProperty('--accent-bg','rgba('+r+','+g+','+b+',.18)');
 
@@ -193,7 +198,7 @@ function setStorageFill(pct){
 if(typeof requestAction==='undefined'){
   handleMessage(JSON.stringify({
     name:'Pelletlager',value:2450,suffix:'kg',digits:0,pct:65,
-    colors:{bg:1843237,text:16777215,textSub:9214891,accent:16739072}
+    colors:{accent:16739072}
   }));
 }
 </script>

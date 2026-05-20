@@ -22,7 +22,9 @@ Dieses Modul enthält eine Sammlung an Kacheln für die Tile Visu.
 
 ## 2. Enthaltene Module
 
-* [Pelletlager](Pelletlager/README.md)
+* [BrauchwasserKachel](BrauchwasserKachel/README.md)
+* [HeizoeltankKachel](HeizoeltankKachel/README.md)
+* [PelletlagerKachel](PelletlagerKachel/README.md)
 * [RolloKachel](RolloKachel/README.md)
 * [ThermostatKachel](ThermostatKachel/README.md)
 * [WetterstationKachel](WetterstationKachel/README.md)

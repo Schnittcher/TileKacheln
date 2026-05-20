@@ -1,14 +1,14 @@
 <?php
 
-class PelletlagerKachel extends IPSModule
+class HeizoeltankKachel extends IPSModule
 {
     public function Create()
     {
         parent::Create();
 
-        $this->RegisterPropertyString('TileName', 'Pelletlager');
-        $this->RegisterPropertyInteger('FillLevelID', 0);
-        $this->RegisterPropertyInteger('ColorAccent',     16739072);
+        $this->RegisterPropertyString('TileName', 'Heizöltank');
+        $this->RegisterPropertyInteger('FillLevelID',       0);
+        $this->RegisterPropertyInteger('ColorAccent',     14710784);
 
         $this->SetVisualizationType(1);
     }
@@ -94,7 +94,6 @@ class PelletlagerKachel extends IPSModule
         // Priorität 1: IPS 7 Variablendarstellung (überschreibt Profil-Werte)
         if (function_exists('IPS_GetVariablePresentation')) {
             $pres = IPS_GetVariablePresentation($varID);
-            IPS_LogMessage('PelletlagerKachel', 'Variable Presentation: ' . print_r($pres, true));
             if (is_array($pres)) {
                 foreach (['SUFFIX', 'Suffix'] as $key) {
                     if (isset($pres[$key]) && $pres[$key] !== '') {

@@ -10,11 +10,9 @@ class ThermostatKachel extends IPSModule
         $this->RegisterPropertyInteger('CurrentTemperatureID', 0);
         $this->RegisterPropertyInteger('TargetTemperatureID', 0);
         $this->RegisterPropertyInteger('HumidityID', 0);
+        $this->RegisterPropertyInteger('ValvePositionID', 0);
         $this->RegisterPropertyInteger('HVACModeID', 0);
-$this->RegisterPropertyInteger('ColorBackground', 1843237);
-        $this->RegisterPropertyInteger('ColorText',       16777215);
-        $this->RegisterPropertyInteger('ColorTextSub',    9214891);
-        $this->RegisterPropertyInteger('ColorHeat', 16739072);
+$this->RegisterPropertyInteger('ColorHeat', 16739072);
         $this->RegisterPropertyInteger('ColorCool', 2201331);
         $this->RegisterPropertyInteger('ColorAuto', 5025616);
         $this->RegisterPropertyInteger('ColorOff',  10066329);
@@ -40,6 +38,7 @@ $this->RegisterPropertyInteger('ColorBackground', 1843237);
             $this->ReadPropertyInteger('CurrentTemperatureID'),
             $this->ReadPropertyInteger('TargetTemperatureID'),
             $this->ReadPropertyInteger('HumidityID'),
+            $this->ReadPropertyInteger('ValvePositionID'),
             $this->ReadPropertyInteger('HVACModeID'),
         ];
 
@@ -80,7 +79,17 @@ $this->RegisterPropertyInteger('ColorBackground', 1843237);
                     $var = IPS_GetVariable($varID);
                     $val = $var['VariableType'] === 1 ? (int) $Value : (string) $Value;
                     RequestAction($varID, $val);
+                }
+                break;
 
+            case 'SetValvePosition':
+                $varID = $this->ReadPropertyInteger('ValvePositionID');
+                if ($varID > 0 && IPS_VariableExists($varID)) {
+                    $var = IPS_GetVariable($varID);
+                    $val = $var['VariableType'] === 1
+                        ? (int) round((float) $Value)
+                        : (float) round((float) $Value, 1);
+                    RequestAction($varID, $val);
                 }
                 break;
         }
@@ -141,16 +150,14 @@ $this->RegisterPropertyInteger('ColorBackground', 1843237);
     private function GetCurrentData(): array
     {
         $data = [
-            'name'        => $this->ReadPropertyString('TileName'),
-            'currentTemp' => null,
-            'targetTemp'  => null,
-            'humidity'    => null,
-            'hvacMode'    => null,
-            'modeOptions' => [],
+            'name'          => $this->ReadPropertyString('TileName'),
+            'currentTemp'   => null,
+            'targetTemp'    => null,
+            'humidity'      => null,
+            'valvePosition' => null,
+            'hvacMode'      => null,
+            'modeOptions'   => [],
             'colors'      => [
-                'bg'      => $this->ReadPropertyInteger('ColorBackground'),
-                'text'    => $this->ReadPropertyInteger('ColorText'),
-                'textSub' => $this->ReadPropertyInteger('ColorTextSub'),
                 'heat'    => $this->ReadPropertyInteger('ColorHeat'),
                 'cool'    => $this->ReadPropertyInteger('ColorCool'),
                 'auto'    => $this->ReadPropertyInteger('ColorAuto'),
@@ -171,6 +178,11 @@ $this->RegisterPropertyInteger('ColorBackground', 1843237);
         $humidityID = $this->ReadPropertyInteger('HumidityID');
         if ($humidityID > 0 && IPS_VariableExists($humidityID)) {
             $data['humidity'] = round((float) GetValue($humidityID), 0);
+        }
+
+        $valveID = $this->ReadPropertyInteger('ValvePositionID');
+        if ($valveID > 0 && IPS_VariableExists($valveID)) {
+            $data['valvePosition'] = round((float) GetValue($valveID), 0);
         }
 
         $hvacModeID = $this->ReadPropertyInteger('HVACModeID');

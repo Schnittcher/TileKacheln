@@ -1,0 +1,286 @@
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
+:root{
+  --text:         var(--content-color,#fff);
+  --text-sub:     color-mix(in srgb,var(--content-color,#fff) 55%,transparent);
+  --c-border:     color-mix(in srgb,var(--content-color,#fff) 20%,transparent);
+  --c-bg:         color-mix(in srgb,var(--content-color,#fff)  7%,transparent);
+  --c-detail:     color-mix(in srgb,var(--content-color,#fff)  7%,transparent);
+  --c-minor:      color-mix(in srgb,var(--content-color,#fff)  6%,transparent);
+  --c-label-hi:   color-mix(in srgb,var(--content-color,#fff) 65%,transparent);
+  --c-label-lo:   color-mix(in srgb,var(--content-color,#fff) 35%,transparent);
+  --c-ui-bg:      color-mix(in srgb,var(--content-color,#fff)  5%,transparent);
+  --c-ui-border:  color-mix(in srgb,var(--content-color,#fff)  8%,transparent);
+  --c-btn-bg:     color-mix(in srgb,var(--content-color,#fff)  6%,transparent);
+  --c-btn-border: color-mix(in srgb,var(--content-color,#fff) 13%,transparent);
+  --c-hover:      color-mix(in srgb,var(--content-color,#fff) 14%,transparent);
+}
+
+.tile{
+  width:100%;
+  height:100%;
+  position:relative;
+  overflow:hidden;
+  font-size:12px;
+  background:transparent;
+  color:var(--text,#fff);
+  padding:1em 0.67em 0.75em;
+  box-shadow:0 4px 20px rgba(0,0,0,.45);
+  display:flex;
+  flex-direction:column;
+}
+.tile::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--accent,#FF3A00);transition:background .3s;
+}
+
+.header{
+  display:flex;align-items:center;
+  margin-bottom:0.5em;
+}
+.tile-name{
+  font-size:1.08em;font-weight:500;color:var(--text-sub,#8C9BAB);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  min-width:0;
+}
+
+/* Pumpe-Pill im Header */
+.pump-pill{
+  flex-shrink:0;align-self:flex-start;
+  display:flex;align-items:center;gap:0.33em;
+  font-size:0.85em;padding:0.17em 0.58em;border-radius:0.83em;
+  border:1px solid var(--c-ui-border);background:var(--c-ui-bg);
+  color:var(--text-sub,#8C9BAB);transition:all .3s;
+}
+.pump-pill.active{
+  background:var(--pump-bg);color:var(--pump-color);
+  border-color:var(--pump-color);
+}
+.pump-dot{
+  width:0.45em;height:0.45em;border-radius:50%;
+  background:currentColor;
+}
+.pump-pill.active .pump-dot{
+  animation:pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{transform:scale(1);opacity:1}
+  50%{transform:scale(1.5);opacity:.6}
+}
+
+
+/* ── Hauptbereich ── */
+.main-row{
+  flex:1;min-height:0;
+  display:flex;flex-direction:row;align-items:stretch;
+  gap:0.5em;
+}
+
+.boiler-wrap{
+  flex-shrink:0;
+  width:36%;
+  display:flex;align-items:center;justify-content:center;
+}
+.boiler-svg{display:block;width:100%;height:100%;}
+
+.info-col{
+  flex:1;min-width:0;
+  display:flex;flex-direction:column;justify-content:center;
+  gap:0.25em;
+}
+.temp-label{
+  font-size:0.85em;color:var(--text-sub,#8C9BAB);
+  letter-spacing:.4px;
+  white-space:normal;line-height:1.25;
+}
+.temp-value{
+  font-size:var(--temp-size,30px);font-weight:200;
+  line-height:1.1;letter-spacing:-0.05em;white-space:nowrap;
+}
+</style>
+
+<div id="tile" class="tile">
+
+  <div class="header">
+    <span class="tile-name" id="tile-name"></span>
+  </div>
+
+  <div class="main-row">
+
+    <!-- Speicher SVG links (inkl. Schwellenwert-Linien) -->
+    <div class="boiler-wrap">
+      <svg class="boiler-svg" id="boiler-svg" viewBox="0 0 52 110">
+        <defs>
+          <clipPath id="boiler-clip">
+            <path d="M5,20 Q5,9 26,9 Q47,9 47,20 L47,82 Q47,101 26,101 Q5,101 5,82 Z"/>
+          </clipPath>
+        </defs>
+
+        <!-- Körper Hintergrund -->
+        <path d="M5,20 Q5,9 26,9 Q47,9 47,20 L47,82 Q47,101 26,101 Q5,101 5,82 Z"
+              fill="rgba(0,0,0,0.4)"/>
+
+        <!-- Wasser-Füllung -->
+        <path id="boiler-fill" d="" fill="#2176ae" opacity="0.7"/>
+
+
+        <!-- Körper Rahmen -->
+        <path d="M5,20 Q5,9 26,9 Q47,9 47,20 L47,82 Q47,101 26,101 Q5,101 5,82 Z"
+              fill="none" style="stroke:var(--c-border)" stroke-width="1.5"/>
+
+        <!-- Flansch oben -->
+        <rect x="13" y="5" width="26" height="6" rx="3"
+              style="fill:var(--c-detail);stroke:var(--c-border)" stroke-width="1.2"/>
+        <rect x="22" y="1" width="8" height="6" rx="2"
+              style="fill:var(--c-minor);stroke:var(--c-border)" stroke-width="1"/>
+
+        <!-- Flansch unten -->
+        <rect x="13" y="99" width="26" height="6" rx="3"
+              style="fill:var(--c-detail);stroke:var(--c-border)" stroke-width="1.2"/>
+        <rect x="22" y="103" width="8" height="6" rx="2"
+              style="fill:var(--c-minor);stroke:var(--c-border)" stroke-width="1"/>
+
+        <!-- Anschlüsse seitlich -->
+        <rect x="0"  y="47" width="6" height="6" rx="2"
+              style="fill:var(--c-minor);stroke:var(--c-border)" stroke-width="1"/>
+        <rect x="46" y="57" width="6" height="6" rx="2"
+              style="fill:var(--c-minor);stroke:var(--c-border)" stroke-width="1"/>
+
+        <!-- Isolierungs-Ringe -->
+        <ellipse cx="26" cy="35" rx="21" ry="2.5"
+                 fill="none" style="stroke:var(--c-detail)" stroke-width="1"/>
+        <ellipse cx="26" cy="65" rx="21" ry="2.5"
+                 fill="none" style="stroke:var(--c-detail)" stroke-width="1"/>
+
+        <!-- ── Labels fix oben im Speicher ── -->
+        <g id="threshold-labels" opacity="0">
+          <!-- Aus-Label (oben = volle Temperatur) -->
+          <text x="8" y="20" font-size="4.8" style="fill:var(--c-label-hi)"
+                font-family="sans-serif">Aus</text>
+          <text id="off-label" x="47" y="20" text-anchor="end" font-size="4.8"
+                style="fill:var(--c-label-hi)" font-family="sans-serif">--°</text>
+          <!-- Ein-Label (unten = Einschalt-Schwelle) -->
+          <text x="8" y="27" font-size="4.8" style="fill:var(--c-label-lo)"
+                font-family="sans-serif">Ein</text>
+          <text id="on-label" x="47" y="27" text-anchor="end" font-size="4.8"
+                style="fill:var(--c-label-lo)" font-family="sans-serif">--°</text>
+        </g>
+
+
+      </svg>
+    </div>
+
+    <!-- Temperatur rechts -->
+    <div class="info-col">
+      <div class="temp-label">Temperatur oben</div>
+      <div class="temp-value" id="temp-top-val">--°</div>
+      <div class="pump-pill" id="pump-pill" style="display:none">
+        <span class="pump-dot"></span>
+        <span>Pumpe</span>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// ── ResizeObserver ────────────────────────────────────────────────────────────
+(function(){
+  if(typeof ResizeObserver==='undefined')return;
+  var t=document.getElementById('tile');
+  new ResizeObserver(function(e){
+    var bs=e[0].borderBoxSize&&e[0].borderBoxSize[0];
+    var w=bs?bs.inlineSize:t.offsetWidth;
+    var h=bs?bs.blockSize:t.offsetHeight;
+    var base=Math.max(10,Math.min(20,Math.min(w,h)/17.5));
+    t.style.fontSize=base.toFixed(2)+'px';
+
+    var tempPx = Math.max(14, h * 0.13);
+    t.style.setProperty('--temp-size', tempPx.toFixed(1)+'px');
+  }).observe(t);
+})();
+
+// ── Hilfs ────────────────────────────────────────────────────────────────────
+function intToHex(n){return '#'+('000000'+n.toString(16)).slice(-6);}
+
+// Boiler-Innenraum: y=9..101 → H=92
+var B_BOT=101, B_H=92;
+
+function setBoilerFill(pct){
+  var fh=(pct/100)*B_H, fy=B_BOT-fh;
+  var fill=document.getElementById('boiler-fill');
+  var surf=document.getElementById('boiler-surface');
+  var anim=document.getElementById('boiler-surface-anim');
+
+  // Boiler komplett mit Wasser füllen (volle Boiler-Form)
+  fill.setAttribute('d',
+    'M5,20 Q5,9 26,9 Q47,9 47,20 L47,82 Q47,101 26,101 Q5,101 5,82 Z');
+}
+
+function updateBoilerViz(tempTop, tempOn, tempOff){
+  // Boiler immer komplett mit Wasser gefüllt
+  setBoilerFill(100);
+
+  // Labels
+  document.getElementById('off-label').textContent=tempOff!==null ? tempOff.toFixed(1)+'°' : '--°';
+  document.getElementById('on-label').textContent =tempOn !==null ? tempOn.toFixed(1)+'°'  : '--°';
+  document.getElementById('threshold-labels').setAttribute(
+    'opacity', (tempOn!==null||tempOff!==null) ? '1' : '0');
+}
+
+// ── handleMessage ─────────────────────────────────────────────────────────────
+function handleMessage(jsonStr){
+  var d=JSON.parse(jsonStr);
+  var colors=d.colors||{};
+  var accentInt=colors.accent||16724736;
+  var pumpInt  =colors.pumpOn ||2201331;
+  var r=(accentInt>>16)&0xff,g=(accentInt>>8)&0xff,b=accentInt&0xff;
+  var pr=(pumpInt>>16)&0xff, pg=(pumpInt>>8)&0xff, pb=pumpInt&0xff;
+
+  var tile=document.getElementById('tile');
+  tile.style.setProperty('--accent',     intToHex(accentInt));
+  tile.style.setProperty('--pump-color', intToHex(pumpInt));
+  tile.style.setProperty('--pump-bg',    'rgba('+pr+','+pg+','+pb+',.12)');
+
+  document.getElementById('tile-name').textContent=d.name||'';
+
+  // Pumpe
+  var pill=document.getElementById('pump-pill');
+  var svg =document.getElementById('boiler-svg');
+  if(d.pumpOn!==null&&d.pumpOn!==undefined){
+    pill.style.removeProperty('display');
+    if(d.pumpOn){
+      pill.classList.add('active');
+      svg.classList.add('pump-on');
+    } else {
+      pill.classList.remove('active');
+      svg.classList.remove('pump-on');
+    }
+  } else {
+    pill.style.display='none';
+    svg.classList.remove('pump-on');
+  }
+
+  // Temperaturen
+  var tempTop=d.tempTop!=null ? parseFloat(d.tempTop) : null;
+  var tempOn =d.tempOn !=null ? parseFloat(d.tempOn)  : null;
+  var tempOff=d.tempOff!=null ? parseFloat(d.tempOff) : null;
+
+  document.getElementById('temp-top-val').textContent=
+    tempTop!==null ? tempTop.toFixed(1)+'°' : '--°';
+
+  updateBoilerViz(tempTop, tempOn, tempOff);
+}
+
+// ── Vorschau ──────────────────────────────────────────────────────────────────
+if(typeof requestAction==='undefined'){
+  handleMessage(JSON.stringify({
+    name:'Brauchwasser',
+    tempTop:58.4, tempOn:62.0, tempOff:45.0,
+    pumpOn:true,
+    colors:{accent:16724736,pumpOn:2201331}
+  }));
+}
+</script>
