@@ -59,6 +59,18 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 .quick-btn:hover{background:var(--c-hover)}
 .quick-btn:active{transform:scale(.94)}
 
+/* ── Preset-Buttons ──────────────────────────────── */
+.preset-btns{display:flex;gap:0.5em;margin-bottom:0.5em}
+.preset-btn{
+  flex:1;min-width:0;padding:0.42em 0.25em;border-radius:0.67em;
+  border:1px solid var(--c-btn-border);background:var(--c-btn-bg);
+  color:var(--text,#fff);font-size:0.92em;cursor:pointer;
+  transition:background .15s,transform .1s;outline:none;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.preset-btn:hover{background:var(--c-hover)}
+.preset-btn:active{transform:scale(.94)}
+
 /* ── Feinsteuerung Reihe ─────────────────────────── */
 .ctrl-row{
   display:flex;flex-direction:column;gap:0.5em;
@@ -135,6 +147,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
   <!-- Quick-Buttons -->
   <div class="quick-btns">
     <button class="quick-btn" onclick="sendOpen()">&#8593; Auf</button>
+    <button class="quick-btn" onclick="sendStop()">&#9632; Stopp</button>
     <button class="quick-btn" onclick="sendClose()">&#8595; Zu</button>
   </div>
 
@@ -150,6 +163,9 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
            min="0" max="100" step="1" value="0"
            oninput="onPosInput(this.value)" onchange="sendPos(this.value)">
   </div>
+
+  <!-- Preset-Buttons -->
+  <div class="preset-btns" id="preset-btns" style="display:none"></div>
 
   <!-- Lamellen Feinsteuerung -->
   <div class="ctrl-row" id="slat-row" style="display:none">
@@ -213,6 +229,22 @@ function handleMessage(jsonStr) {
     setShutterPos(0);
   }
 
+  var presetBtns = document.getElementById("preset-btns");
+  if (d.presets && d.presets.length > 0) {
+    presetBtns.innerHTML = "";
+    d.presets.forEach(function(p) {
+      var btn = document.createElement("button");
+      btn.className = "preset-btn";
+      btn.textContent = p.label;
+      btn.title = p.value + "%";
+      btn.onclick = function() { sendPreset(p.value); };
+      presetBtns.appendChild(btn);
+    });
+    presetBtns.style.removeProperty("display");
+  } else {
+    presetBtns.style.display = "none";
+  }
+
   var slatRow = document.getElementById("slat-row");
   if (d.slats !== null) {
     _currentSlats = d.slats;
@@ -228,23 +260,39 @@ function handleMessage(jsonStr) {
 }
 
 function setShutterPos(pos) {
-  // min = open (no fill), max = closed (full fill); inner height = 82
+  // without invert: min = open (no fill), max = closed (full fill)
+  // with invert:    max = open (no fill), min = closed (full fill)
   var lo = _config.min != null ? _config.min : 0;
   var hi = _config.max != null ? _config.max : 100;
   var pct = hi > lo ? (pos - lo) / (hi - lo) : 0;
+  if (_config.invert) pct = 1 - pct;
   document.getElementById("blind-clip-rect").setAttribute("height", (pct * 82).toFixed(1));
 }
 
 function sendOpen() {
-  var v = _config.min != null ? _config.min : 0;
+  var v = _config.invert
+    ? (_config.max != null ? _config.max : 100)
+    : (_config.min != null ? _config.min : 0);
   _setPos(v);
   if (typeof requestAction !== 'undefined') requestAction("SetPosition", v);
 }
 
 function sendClose() {
-  var v = _config.max != null ? _config.max : 100;
+  var v = _config.invert
+    ? (_config.min != null ? _config.min : 0)
+    : (_config.max != null ? _config.max : 100);
   _setPos(v);
   if (typeof requestAction !== 'undefined') requestAction("SetPosition", v);
+}
+
+function sendStop() {
+  if (_currentPos === null) return;
+  if (typeof requestAction !== 'undefined') requestAction("SetPosition", _currentPos);
+}
+
+function sendPreset(val) {
+  _setPos(val);
+  if (typeof requestAction !== 'undefined') requestAction("SetPosition", val);
 }
 
 function adjustPos(dir) {
@@ -307,9 +355,15 @@ function sendSlat(val) {
 }
 
 if (typeof requestAction === 'undefined') {
-  _config = {min: 0, max: 100, step: 10};
+  _config = {min: 0, max: 100, step: 10, invert: false};
   handleMessage(JSON.stringify({
     name: 'Wohnzimmer Rollo', position: 65, slats: 30,
+    presets: [
+      {label: 'Lüften', value: 10},
+      {label: 'Halb',   value: 50},
+      {label: 'Nacht',  value: 80},
+      {label: 'Zu',     value: 100}
+    ],
     colors: {accent: 2201331}
   }));
 }

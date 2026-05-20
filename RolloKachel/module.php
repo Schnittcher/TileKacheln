@@ -8,8 +8,18 @@ class RolloKachel extends IPSModule
 
         $this->RegisterPropertyString('TileName', 'Rollo');
         $this->RegisterPropertyInteger('PositionID', 0);
+        $this->RegisterPropertyBoolean('Invert', false);
         $this->RegisterPropertyInteger('SlatsID', 0);
         $this->RegisterPropertyInteger('ColorAccent', 2201331);
+
+        $this->RegisterPropertyString('Preset1Label', '');
+        $this->RegisterPropertyFloat('Preset1Value', 0.0);
+        $this->RegisterPropertyString('Preset2Label', '');
+        $this->RegisterPropertyFloat('Preset2Value', 0.0);
+        $this->RegisterPropertyString('Preset3Label', '');
+        $this->RegisterPropertyFloat('Preset3Value', 0.0);
+        $this->RegisterPropertyString('Preset4Label', '');
+        $this->RegisterPropertyFloat('Preset4Value', 0.0);
 
         $this->SetVisualizationType(1);
     }
@@ -82,9 +92,10 @@ class RolloKachel extends IPSModule
         $posCfg = $this->GetVarConfig($this->ReadPropertyInteger('PositionID'));
 
         $configJson = json_encode([
-            'min'  => $posCfg['min'],
-            'max'  => $posCfg['max'],
-            'step' => $posCfg['step'],
+            'min'    => $posCfg['min'],
+            'max'    => $posCfg['max'],
+            'step'   => $posCfg['step'],
+            'invert' => $this->ReadPropertyBoolean('Invert'),
         ]);
         $dataJsonLiteral = json_encode(json_encode($this->GetCurrentData()));
 
@@ -140,10 +151,22 @@ class RolloKachel extends IPSModule
 
     private function GetCurrentData(): array
     {
+        $presets = [];
+        for ($i = 1; $i <= 4; $i++) {
+            $label = $this->ReadPropertyString('Preset' . $i . 'Label');
+            if ($label !== '') {
+                $presets[] = [
+                    'label' => $label,
+                    'value' => $this->ReadPropertyFloat('Preset' . $i . 'Value'),
+                ];
+            }
+        }
+
         $data = [
             'name'     => $this->ReadPropertyString('TileName'),
             'position' => null,
             'slats'    => null,
+            'presets'  => $presets,
             'colors'   => [
                 'accent'  => $this->ReadPropertyInteger('ColorAccent'),
             ],

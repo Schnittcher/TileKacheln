@@ -72,6 +72,8 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 .sp-btn:hover{background:var(--c-hover)}
 .sp-btn:active{transform:scale(.88)}
 .sp-val{font-size:1.67em;font-weight:300;min-width:3em;text-align:center}
+.setpoint-control.readonly .sp-btn{display:none}
+.setpoint-control.readonly{justify-content:center}
 
 /* ── Ventilposition ─────────────────────────────────── */
 .valve-row{
@@ -105,10 +107,21 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
   border:2px solid var(--accent,#444);
   cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.3);
 }
+.valve-slider:disabled{opacity:0.45;cursor:default;pointer-events:none;}
 .valve-pct{
   font-size:0.92em;font-weight:300;
   white-space:nowrap;flex-shrink:0;min-width:2.5em;text-align:right;
 }
+.valve-toggle{
+  flex:1;padding:0.3em 0.75em;border-radius:1em;text-align:center;
+  border:1px solid var(--c-btn-border);background:var(--c-btn-bg);
+  color:var(--text-sub,#8C9BAB);font-size:0.92em;cursor:pointer;outline:none;
+  transition:background .2s,border-color .2s,color .2s;
+}
+.valve-toggle.on{
+  background:var(--accent-bg);border-color:var(--accent);color:var(--accent);
+}
+.valve-toggle.readonly{cursor:default;pointer-events:none;}
 
 .mode-buttons{display:flex;gap:0.33em;margin-top:0.5em;justify-content:center;flex-wrap:wrap}
 .mode-btn{
@@ -149,11 +162,15 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 
   <div id="valve-row" class="valve-row" style="display:none">
     <span class="valve-label">Ventil</span>
-    <input type="range" class="valve-slider" id="valve-slider"
-           min="0" max="100" step="1" value="0"
-           oninput="onValveInput(this.value)"
-           onchange="sendValve(this.value)">
-    <span class="valve-pct" id="valve-pct">0%</span>
+    <div id="valve-numeric" style="flex:1;display:flex;align-items:center;gap:0.5em">
+      <input type="range" class="valve-slider" id="valve-slider"
+             min="0" max="100" step="1" value="0"
+             oninput="onValveInput(this.value)"
+             onchange="sendValve(this.value)">
+      <span class="valve-pct" id="valve-pct">0%</span>
+    </div>
+    <button id="valve-toggle" class="valve-toggle" style="display:none"
+            onclick="sendValveBool()">--</button>
   </div>
 
   <div class="mode-buttons" id="mode-buttons"></div>
@@ -161,7 +178,8 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 </div>
 
 <script>
-var _currentTarget = null;
+var _currentTarget  = null;
+var _valveBoolState = false;
 var _config = {min: 5, max: 30, step: 0.5};
 
 // ── Responsive Skalierung ───────────────────────────────────────────────────
@@ -247,15 +265,26 @@ document.getElementById("current-temp").textContent =
     _currentTarget = parseFloat(d.targetTemp);
     document.getElementById("setpoint-val").textContent = _currentTarget.toFixed(1) + "°";
     spWrap.style.removeProperty("display");
+    var spCtrl = spWrap.querySelector(".setpoint-control");
+    if (d.targetTempEditable === false) {
+      spCtrl.classList.add("readonly");
+    } else {
+      spCtrl.classList.remove("readonly");
+    }
   } else {
     spWrap.style.display = "none";
   }
 
   var valveRow = document.getElementById("valve-row");
   if (d.valvePosition !== null && d.valvePosition !== undefined) {
-    var vp = Math.max(0, Math.min(100, Math.round(d.valvePosition)));
-    setValveDisplay(vp);
     valveRow.style.removeProperty("display");
+    var valveEditable = d.valveEditable !== false;
+    if (d.valveType === "bool") {
+      setValveBool(d.valvePosition, valveEditable);
+    } else {
+      var vp = Math.max(0, Math.min(100, Math.round(d.valvePosition)));
+      setValveDisplay(vp, valveEditable);
+    }
   } else {
     valveRow.style.display = "none";
   }
@@ -263,10 +292,32 @@ document.getElementById("current-temp").textContent =
   updateModeButtons(d);
 }
 
-function setValveDisplay(vp) {
-  document.getElementById("valve-slider").value = vp;
+function setValveDisplay(vp, editable) {
+  document.getElementById("valve-numeric").style.removeProperty("display");
+  document.getElementById("valve-toggle").style.display = "none";
+  var slider = document.getElementById("valve-slider");
+  slider.value = vp;
+  slider.disabled = (editable === false);
   document.getElementById("valve-pct").textContent = vp + "%";
   document.getElementById("tile").style.setProperty("--vp", vp + "%");
+}
+
+function setValveBool(state, editable) {
+  document.getElementById("valve-numeric").style.display = "none";
+  _valveBoolState = state;
+  var btn = document.getElementById("valve-toggle");
+  btn.style.removeProperty("display");
+  btn.textContent = state ? "Offen" : "Zu";
+  btn.className = "valve-toggle" + (state ? " on" : "") + (editable ? "" : " readonly");
+}
+
+function sendValveBool() {
+  var btn = document.getElementById("valve-toggle");
+  if (btn.classList.contains("readonly")) return;
+  _valveBoolState = !_valveBoolState;
+  btn.textContent = _valveBoolState ? "Offen" : "Zu";
+  _valveBoolState ? btn.classList.add("on") : btn.classList.remove("on");
+  if (typeof requestAction !== "undefined") requestAction("SetValvePosition", _valveBoolState ? 1 : 0);
 }
 
 function onValveInput(val) {
@@ -317,8 +368,8 @@ function classifyMode(mode) {
 
 if (typeof requestAction === 'undefined') {
   handleMessage(JSON.stringify({
-    name: 'Thermostat', currentTemp: 21.5, targetTemp: 22.0, humidity: 48,
-    valvePosition: 42,
+    name: 'Thermostat', currentTemp: 21.5, targetTemp: 22.0, targetTempEditable: true, humidity: 48,
+    valvePosition: 42, valveType: 'numeric', valveEditable: true,
     hvacMode: 'heat',
     modeOptions: [
       {value: 'heat', label: 'Heizen'}, {value: 'cool', label: 'Kühlen'},

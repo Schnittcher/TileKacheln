@@ -26,6 +26,12 @@
             "value": 0
         },
         {
+            "name": "Invert",
+            "type": "CheckBox",
+            "caption": "Position invertieren (Maximum = offen, Minimum = geschlossen)",
+            "value": false
+        },
+        {
             "name": "SlatsID",
             "type": "SelectVariable",
             "caption": "Lamellen / Slats (optional)",
@@ -34,6 +40,95 @@
                 2
             ],
             "value": 0
+        },
+        {
+            "type": "Label",
+            "bold": true,
+            "caption": "Vorwahl-Buttons (optional)"
+        },
+        {
+            "type": "Label",
+            "caption": "Beschriftung leer lassen um den jeweiligen Button zu verbergen."
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "name": "Preset1Label",
+                    "type": "ValidationTextBox",
+                    "caption": "Button 1 – Beschriftung",
+                    "value": ""
+                },
+                {
+                    "name": "Preset1Value",
+                    "type": "NumberSpinner",
+                    "caption": "Position",
+                    "minimum": -99999,
+                    "maximum": 99999,
+                    "digits": 1,
+                    "value": 0
+                }
+            ]
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "name": "Preset2Label",
+                    "type": "ValidationTextBox",
+                    "caption": "Button 2 – Beschriftung",
+                    "value": ""
+                },
+                {
+                    "name": "Preset2Value",
+                    "type": "NumberSpinner",
+                    "caption": "Position",
+                    "minimum": -99999,
+                    "maximum": 99999,
+                    "digits": 1,
+                    "value": 0
+                }
+            ]
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "name": "Preset3Label",
+                    "type": "ValidationTextBox",
+                    "caption": "Button 3 – Beschriftung",
+                    "value": ""
+                },
+                {
+                    "name": "Preset3Value",
+                    "type": "NumberSpinner",
+                    "caption": "Position",
+                    "minimum": -99999,
+                    "maximum": 99999,
+                    "digits": 1,
+                    "value": 0
+                }
+            ]
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "name": "Preset4Label",
+                    "type": "ValidationTextBox",
+                    "caption": "Button 4 – Beschriftung",
+                    "value": ""
+                },
+                {
+                    "name": "Preset4Value",
+                    "type": "NumberSpinner",
+                    "caption": "Position",
+                    "minimum": -99999,
+                    "maximum": 99999,
+                    "digits": 1,
+                    "value": 0
+                }
+            ]
         },
         {
             "type": "Label",

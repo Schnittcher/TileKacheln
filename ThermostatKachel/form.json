@@ -46,8 +46,9 @@
         {
             "name": "ValvePositionID",
             "type": "SelectVariable",
-            "caption": "Ventilposition 0–100 % (optional)",
+            "caption": "Ventilposition / Ventilstatus (optional)",
             "validVariableTypes": [
+                0,
                 1,
                 2
             ],
