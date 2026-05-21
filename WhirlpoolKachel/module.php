@@ -12,6 +12,8 @@ class WhirlpoolKachel extends IPSModule
         $this->RegisterPropertyInteger('BubblesID', 0);
         $this->RegisterPropertyInteger('PumpID', 0);
         $this->RegisterPropertyInteger('HeatingID', 0);
+        $this->RegisterPropertyInteger('PowerID', 0);
+        $this->RegisterPropertyInteger('EnergyID', 0);
 $this->RegisterPropertyInteger('ColorAccent',     46296);
         $this->RegisterPropertyInteger('ColorBubbles',    46296);
         $this->RegisterPropertyInteger('ColorPump',       2201331);
@@ -41,6 +43,8 @@ $this->RegisterPropertyInteger('ColorAccent',     46296);
             $this->ReadPropertyInteger('BubblesID'),
             $this->ReadPropertyInteger('PumpID'),
             $this->ReadPropertyInteger('HeatingID'),
+            $this->ReadPropertyInteger('PowerID'),
+            $this->ReadPropertyInteger('EnergyID'),
         ];
 
         $anyLinked = false;
@@ -149,6 +153,12 @@ $this->RegisterPropertyInteger('ColorAccent',     46296);
             'bubblesOn'   => null,
             'pumpOn'      => null,
             'heatingOn'   => null,
+            'power'        => null,
+            'powerPrefix'  => '',
+            'powerUnit'    => '',
+            'energy'       => null,
+            'energyPrefix' => '',
+            'energyUnit'   => '',
             'colors'      => [
                 'accent'  => $this->ReadPropertyInteger('ColorAccent'),
                 'bubbles' => $this->ReadPropertyInteger('ColorBubbles'),
@@ -172,6 +182,88 @@ $this->RegisterPropertyInteger('ColorAccent',     46296);
             if ($varID > 0 && IPS_VariableExists($varID)) {
                 $data[$key] = (bool) GetValue($varID);
             }
+        }
+
+        $powerID = $this->ReadPropertyInteger('PowerID');
+        if ($powerID > 0 && IPS_VariableExists($powerID)) {
+            $var         = IPS_GetVariable($powerID);
+            $profileName = $var['VariableCustomProfile'] !== ''
+                ? $var['VariableCustomProfile']
+                : $var['VariableProfile'];
+
+            $prefix = '';
+            $unit   = '';
+            $digits = ($var['VariableType'] === VARIABLETYPE_FLOAT) ? 2 : 0;
+
+            // Priorität 2: Profil
+            if ($profileName !== '' && IPS_VariableProfileExists($profileName)) {
+                $profile = IPS_GetVariableProfile($profileName);
+                $prefix  = trim($profile['Prefix']);
+                $unit    = trim($profile['Suffix']);
+                if ($profile['Digits'] > 0) {
+                    $digits = $profile['Digits'];
+                }
+            }
+
+            // Priorität 1: IPS 7 Darstellung (überschreibt Profil)
+            if (function_exists('IPS_GetVariablePresentation')) {
+                $pres = IPS_GetVariablePresentation($powerID);
+                if (is_array($pres)) {
+                    if (!empty($pres['PREFIX'])) {
+                        $prefix = trim($pres['PREFIX']);
+                    }
+                    if (!empty($pres['SUFFIX'])) {
+                        $unit = trim($pres['SUFFIX']);
+                    }
+                    if (isset($pres['DIGITS']) && $pres['DIGITS'] >= 0) {
+                        $digits = (int) $pres['DIGITS'];
+                    }
+                }
+            }
+
+            $data['power']        = round((float) GetValue($powerID), $digits);
+            $data['powerPrefix']  = $prefix;
+            $data['powerUnit']    = $unit;
+        }
+
+        $energyID = $this->ReadPropertyInteger('EnergyID');
+        if ($energyID > 0 && IPS_VariableExists($energyID)) {
+            $var         = IPS_GetVariable($energyID);
+            $profileName = $var['VariableCustomProfile'] !== ''
+                ? $var['VariableCustomProfile']
+                : $var['VariableProfile'];
+
+            $prefix = '';
+            $unit   = '';
+            $digits = ($var['VariableType'] === VARIABLETYPE_FLOAT) ? 2 : 0;
+
+            if ($profileName !== '' && IPS_VariableProfileExists($profileName)) {
+                $profile = IPS_GetVariableProfile($profileName);
+                $prefix  = trim($profile['Prefix']);
+                $unit    = trim($profile['Suffix']);
+                if ($profile['Digits'] > 0) {
+                    $digits = $profile['Digits'];
+                }
+            }
+
+            if (function_exists('IPS_GetVariablePresentation')) {
+                $pres = IPS_GetVariablePresentation($energyID);
+                if (is_array($pres)) {
+                    if (!empty($pres['PREFIX'])) {
+                        $prefix = trim($pres['PREFIX']);
+                    }
+                    if (!empty($pres['SUFFIX'])) {
+                        $unit = trim($pres['SUFFIX']);
+                    }
+                    if (isset($pres['DIGITS']) && $pres['DIGITS'] >= 0) {
+                        $digits = (int) $pres['DIGITS'];
+                    }
+                }
+            }
+
+            $data['energy']       = round((float) GetValue($energyID), $digits);
+            $data['energyPrefix'] = $prefix;
+            $data['energyUnit']   = $unit;
         }
 
         return $data;

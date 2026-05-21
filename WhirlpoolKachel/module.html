@@ -94,7 +94,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 .water-temp{
   text-align:center;
   font-size:var(--water-temp-size,3.5em);font-weight:200;
-  letter-spacing:-0.04em;line-height:1.1;
+  letter-spacing:-0.05em;line-height:1.1;
   position:relative;z-index:1;
 }
 
@@ -118,37 +118,48 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 
 /* ── Sollwert ────────────────────────────────────── */
 .sp-label{
-  font-size:0.92em;color:var(--text-sub,#8C9BAB);text-align:center;
-  margin-bottom:0.33em;text-transform:uppercase;letter-spacing:.5px;
+  font-size:0.85em;color:var(--text-sub,#8C9BAB);text-align:center;
+  margin-bottom:0.25em;text-transform:uppercase;letter-spacing:.5px;
 }
 .setpoint-control{
-  display:flex;align-items:center;justify-content:center;gap:0.75em;
-  padding:0.42em 0.67em;background:var(--c-ui-bg);
+  display:flex;align-items:center;justify-content:center;gap:0.67em;
+  padding:0.33em 0.67em;background:var(--c-ui-bg);
   border-radius:0.67em;border:1px solid var(--c-ui-border);
-  margin-bottom:0.5em;
+  margin-bottom:0.42em;
 }
 .sp-btn{
-  width:2em;aspect-ratio:1;border-radius:50%;
+  width:1.83em;aspect-ratio:1;border-radius:50%;
   border:1px solid var(--c-btn-border);background:var(--c-btn-bg);
-  color:var(--text,#fff);font-size:1.33em;cursor:pointer;outline:none;
+  color:var(--text,#fff);font-size:1.25em;cursor:pointer;outline:none;
   display:flex;align-items:center;justify-content:center;
   transition:background .15s,transform .1s;
 }
 .sp-btn:hover{background:var(--c-hover)}
 .sp-btn:active{transform:scale(.88)}
-.sp-val{font-size:1.67em;font-weight:300;min-width:3em;text-align:center}
+.sp-val{font-size:1.5em;font-weight:300;min-width:3em;text-align:center}
+
+/* ── Leistungsanzeige ────────────────────────────── */
+.power-row{
+  display:flex;align-items:center;justify-content:center;gap:0.5em;
+  padding:0.1em 0.25em;
+  margin-bottom:0.4em;font-size:0.88em;
+}
+.power-icon{color:var(--accent,#00B4D8)}
+.power-val{color:var(--text-sub,#8C9BAB)}
+.power-sep{color:var(--text-sub,#8C9BAB);opacity:.4}
+.energy-val{color:var(--text-sub,#8C9BAB)}
 
 /* ── Toggle-Buttons ──────────────────────────────── */
-.toggle-row{display:flex;gap:0.5em}
+.toggle-row{display:flex;gap:0.4em}
 .toggle-btn{
-  flex:1;padding:0.5em 0.33em;border-radius:0.67em;
+  flex:1;padding:0.33em 0.2em;border-radius:0.67em;
   border:1px solid var(--c-ui-border);background:var(--c-ui-bg);
-  color:var(--text-sub,#8C9BAB);font-size:0.92em;cursor:pointer;
+  color:var(--text-sub,#8C9BAB);font-size:0.88em;cursor:pointer;
   transition:all .15s;outline:none;
-  display:flex;flex-direction:column;align-items:center;gap:0.25em;
+  display:flex;flex-direction:column;align-items:center;gap:0.15em;
   line-height:1;
 }
-.toggle-btn .t-icon{font-size:1.17em}
+.toggle-btn .t-icon{font-size:1.05em}
 .toggle-btn:hover{background:var(--c-hover)}
 .toggle-btn:active{transform:scale(.94)}
 .toggle-btn.on{
@@ -201,6 +212,14 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
     </div>
   </div>
 
+  <!-- Leistungsanzeige -->
+  <div id="power-row" class="power-row" style="display:none">
+    <span class="power-icon">&#9889;</span>
+    <span id="power-val" class="power-val">--</span>
+    <span id="energy-sep" class="power-sep" style="display:none">·</span>
+    <span id="energy-val" class="energy-val" style="display:none">--</span>
+  </div>
+
   <!-- Toggle-Buttons -->
   <div class="toggle-row">
     <button class="toggle-btn hidden" id="btn-bubbles" onclick="toggleSwitch('Bubbles')">
@@ -227,14 +246,18 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
     var bs=e[0].borderBoxSize&&e[0].borderBoxSize[0];
     var w=bs?bs.inlineSize:t.offsetWidth;
     var h=bs?bs.blockSize:t.offsetHeight;
-    var base=Math.max(10,Math.min(20,Math.min(w,h)/17.5));
+    // Schriftgröße nur von der Höhe ableiten → Steuerelemente
+    // behalten bei jeder Breite dieselbe vertikale Proportion
+    // Höhe treibt die Basis, Breite verhindert Überlauf bei schmalen Kacheln
+    var base=Math.max(10,Math.min(20,h/18,w/15));
     t.style.fontSize=base.toFixed(2)+'px';
 
-    // Wassertemperatur dynamisch skalieren
+    // Wassertemperatur: wie ThermostatKachel, aber auch Breite begrenzt
     var wa=document.getElementById('water-area');
     if(wa){
       var wh=wa.offsetHeight;
-      var px=Math.max(base*2,Math.min(base*6,wh*0.42));
+      var maxByWidth=wa.offsetWidth*0.32; // "25.0°" hat ~5 Zeichen → passt sicher
+      var px=Math.max(base*2,Math.min(base*5.5,wh*0.55,maxByWidth));
       t.style.setProperty('--water-temp-size',(px/base).toFixed(3)+'em');
     }
   }).observe(t);
@@ -308,6 +331,28 @@ function handleMessage(jsonStr){
     spWrap.style.display='none';
   }
 
+  // Leistung
+  var powerRow=document.getElementById('power-row');
+  if(d.power !== null && d.power !== undefined){
+    document.getElementById('power-val').textContent =
+      (d.powerPrefix ? d.powerPrefix + ' ' : '') + d.power + (d.powerUnit ? ' ' + d.powerUnit : '');
+    powerRow.style.removeProperty('display');
+  } else {
+    powerRow.style.display='none';
+  }
+
+  var energySep = document.getElementById('energy-sep');
+  var energyVal = document.getElementById('energy-val');
+  if(d.energy !== null && d.energy !== undefined){
+    energyVal.textContent =
+      (d.energyPrefix ? d.energyPrefix + ' ' : '') + d.energy + (d.energyUnit ? ' ' + d.energyUnit : '');
+    energySep.style.removeProperty('display');
+    energyVal.style.removeProperty('display');
+  } else {
+    energySep.style.display='none';
+    energyVal.style.display='none';
+  }
+
   // Schalter
   _bubblesOn=d.bubblesOn;
   _pumpOn   =d.pumpOn;
@@ -363,6 +408,7 @@ if(typeof requestAction==='undefined'){
   handleMessage(JSON.stringify({
     name:'Whirlpool', currentTemp:38.5, targetTemp:39.0,
     bubblesOn:true, pumpOn:true, heatingOn:false,
+    power:2340, powerUnit:'W', energy:12.5, energyUnit:'kWh',
     config:{min:20, max:42, step:0.5},
     colors:{accent:46296, bubbles:46296, pump:2201331, heating:16739072}
   }));

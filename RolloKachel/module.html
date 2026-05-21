@@ -41,7 +41,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 }
 /* ── Shutter SVG ─────────────────────────────────── */
 .shutter-wrap{
-  flex:1;min-height:0;
+  flex:1 1 4em;min-height:4em;
   display:flex;align-items:stretch;
   padding:0.33em 0;
 }
@@ -190,10 +190,13 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
     var bs=e[0].borderBoxSize&&e[0].borderBoxSize[0];
     var w=bs?bs.inlineSize:t.offsetWidth;
     var h=bs?bs.blockSize:t.offsetHeight;
-    t.style.fontSize=Math.max(10,Math.min(20,Math.min(w,h)/17.5)).toFixed(2)+'px';
+    // RolloKachel hat viele Controls → Höhe begrenzt, Breite verhindert Überlauf
+    t.style.fontSize=Math.max(10,Math.min(20,h/25,w/16)).toFixed(2)+'px';
   }).observe(t);
 })();
 
+// position and slats are always 0-100 % (normalised by PHP via HelperDimDevice)
+// invert is handled server-side; JS only deals with the normalised percentage
 var _currentPos   = null;
 var _currentSlats = null;
 
@@ -217,11 +220,10 @@ function handleMessage(jsonStr) {
   var posRow = document.getElementById("pos-row");
   if (d.position !== null) {
     _currentPos = d.position;
-    document.getElementById("pos-val").textContent = d.position + "%";
+    document.getElementById("pos-val").textContent = Math.round(d.position) + "%";
     posRow.style.removeProperty("display");
     setShutterPos(d.position);
     var ps = document.getElementById("pos-slider");
-    ps.min = _config.min; ps.max = _config.max; ps.step = _config.step;
     ps.value = d.position;
     _updateSliderFill("--pos-fill", d.position);
   } else {
@@ -248,10 +250,9 @@ function handleMessage(jsonStr) {
   var slatRow = document.getElementById("slat-row");
   if (d.slats !== null) {
     _currentSlats = d.slats;
-    document.getElementById("slat-val").textContent = d.slats + "%";
+    document.getElementById("slat-val").textContent = Math.round(d.slats) + "%";
     slatRow.style.removeProperty("display");
     var ss = document.getElementById("slat-slider");
-    ss.min = _config.min; ss.max = _config.max; ss.step = _config.step;
     ss.value = d.slats;
     _updateSliderFill("--slat-fill", d.slats);
   } else {
@@ -259,30 +260,21 @@ function handleMessage(jsonStr) {
   }
 }
 
+// pos is always 0 (open) … 100 (closed)
 function setShutterPos(pos) {
-  // without invert: min = open (no fill), max = closed (full fill)
-  // with invert:    max = open (no fill), min = closed (full fill)
-  var lo = _config.min != null ? _config.min : 0;
-  var hi = _config.max != null ? _config.max : 100;
-  var pct = hi > lo ? (pos - lo) / (hi - lo) : 0;
-  if (_config.invert) pct = 1 - pct;
+  var pct = Math.max(0, Math.min(100, pos)) / 100;
   document.getElementById("blind-clip-rect").setAttribute("height", (pct * 82).toFixed(1));
 }
 
+// PHP invert-flag already applied → 0 is always "open", 100 is always "closed"
 function sendOpen() {
-  var v = _config.invert
-    ? (_config.max != null ? _config.max : 100)
-    : (_config.min != null ? _config.min : 0);
-  _setPos(v);
-  if (typeof requestAction !== 'undefined') requestAction("SetPosition", v);
+  _setPos(0);
+  if (typeof requestAction !== 'undefined') requestAction("SetPosition", 0);
 }
 
 function sendClose() {
-  var v = _config.invert
-    ? (_config.min != null ? _config.min : 0)
-    : (_config.max != null ? _config.max : 100);
-  _setPos(v);
-  if (typeof requestAction !== 'undefined') requestAction("SetPosition", v);
+  _setPos(100);
+  if (typeof requestAction !== 'undefined') requestAction("SetPosition", 100);
 }
 
 function sendStop() {
@@ -297,20 +289,16 @@ function sendPreset(val) {
 
 function adjustPos(dir) {
   if (_currentPos === null) return;
-  var lo = _config.min != null ? _config.min : 0;
-  var hi = _config.max != null ? _config.max : 100;
-  var next = Math.max(lo, Math.min(hi, _currentPos + dir * _config.step));
+  var next = Math.max(0, Math.min(100, _currentPos + dir * _config.step));
   _setPos(next);
   if (typeof requestAction !== 'undefined') requestAction("SetPosition", next);
 }
 
 function adjustSlats(dir) {
   if (_currentSlats === null) return;
-  var lo = _config.min != null ? _config.min : 0;
-  var hi = _config.max != null ? _config.max : 100;
-  var next = Math.max(lo, Math.min(hi, _currentSlats + dir * _config.step));
+  var next = Math.max(0, Math.min(100, _currentSlats + dir * _config.step));
   _currentSlats = next;
-  document.getElementById("slat-val").textContent = next + "%";
+  document.getElementById("slat-val").textContent = Math.round(next) + "%";
   var ss = document.getElementById("slat-slider");
   if (ss) { ss.value = next; _updateSliderFill("--slat-fill", next); }
   if (typeof requestAction !== 'undefined') requestAction("SetSlats", next);
@@ -318,23 +306,20 @@ function adjustSlats(dir) {
 
 function _setPos(val) {
   _currentPos = val;
-  document.getElementById("pos-val").textContent = val + "%";
+  document.getElementById("pos-val").textContent = Math.round(val) + "%";
   setShutterPos(val);
   var ps = document.getElementById("pos-slider");
   if (ps) { ps.value = val; _updateSliderFill("--pos-fill", val); }
 }
 
 function _updateSliderFill(varName, val) {
-  var lo = _config.min != null ? _config.min : 0;
-  var hi = _config.max != null ? _config.max : 100;
-  var pct = hi > lo ? ((val - lo) / (hi - lo) * 100) : 0;
-  document.getElementById("tile").style.setProperty(varName, pct.toFixed(1) + "%");
+  document.getElementById("tile").style.setProperty(varName, parseFloat(val).toFixed(1) + "%");
 }
 
 function onPosInput(val) {
   val = parseFloat(val);
   _currentPos = val;
-  document.getElementById("pos-val").textContent = val + "%";
+  document.getElementById("pos-val").textContent = Math.round(val) + "%";
   setShutterPos(val);
   _updateSliderFill("--pos-fill", val);
 }
@@ -346,7 +331,7 @@ function sendPos(val) {
 function onSlatInput(val) {
   val = parseFloat(val);
   _currentSlats = val;
-  document.getElementById("slat-val").textContent = val + "%";
+  document.getElementById("slat-val").textContent = Math.round(val) + "%";
   _updateSliderFill("--slat-fill", val);
 }
 
@@ -355,7 +340,7 @@ function sendSlat(val) {
 }
 
 if (typeof requestAction === 'undefined') {
-  _config = {min: 0, max: 100, step: 10, invert: false};
+  _config = {step: 10};
   handleMessage(JSON.stringify({
     name: 'Wohnzimmer Rollo', position: 65, slats: 30,
     presets: [

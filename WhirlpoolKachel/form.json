@@ -64,6 +64,26 @@
             "value": 0
         },
         {
+            "name": "PowerID",
+            "type": "SelectVariable",
+            "caption": "Leistung / Watt (optional)",
+            "validVariableTypes": [
+                1,
+                2
+            ],
+            "value": 0
+        },
+        {
+            "name": "EnergyID",
+            "type": "SelectVariable",
+            "caption": "Energie / kWh (optional)",
+            "validVariableTypes": [
+                1,
+                2
+            ],
+            "value": 0
+        },
+        {
             "type": "Label",
             "bold": true,
             "caption": "Akzentfarbe"

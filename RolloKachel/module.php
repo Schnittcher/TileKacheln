@@ -1,7 +1,11 @@
 <?php
 
+require_once __DIR__ . '/../libs/SymconHelper/dimDevice.php';
+
 class RolloKachel extends IPSModule
 {
+    use HelperDimDevice;
+
     public function Create()
     {
         parent::Create();
@@ -64,11 +68,18 @@ class RolloKachel extends IPSModule
             case 'SetPosition':
                 $varID = $this->ReadPropertyInteger('PositionID');
                 if ($varID > 0 && IPS_VariableExists($varID)) {
-                    $cfg = $this->GetVarConfig($varID);
+                    $pct = (float) $Value;
+                    if ($this->ReadPropertyBoolean('Invert')) {
+                        $pct = 100 - $pct;
+                    }
+                    $absoluteValue = self::percentToAbsolute($varID, $pct);
+                    if ($absoluteValue === false) {
+                        break;
+                    }
                     $var = IPS_GetVariable($varID);
-                    $val = $var['VariableType'] === 2
-                        ? (float) max($cfg['min'], min($cfg['max'], (float) $Value))
-                        : (int)   round(max($cfg['min'], min($cfg['max'], (float) $Value)));
+                    $val = $var['VariableType'] === VARIABLETYPE_FLOAT
+                        ? (float) $absoluteValue
+                        : (int) round($absoluteValue);
                     RequestAction($varID, $val);
                 }
                 break;
@@ -76,11 +87,14 @@ class RolloKachel extends IPSModule
             case 'SetSlats':
                 $varID = $this->ReadPropertyInteger('SlatsID');
                 if ($varID > 0 && IPS_VariableExists($varID)) {
-                    $cfg = $this->GetVarConfig($varID);
+                    $absoluteValue = self::percentToAbsolute($varID, (float) $Value);
+                    if ($absoluteValue === false) {
+                        break;
+                    }
                     $var = IPS_GetVariable($varID);
-                    $val = $var['VariableType'] === 2
-                        ? (float) max($cfg['min'], min($cfg['max'], (float) $Value))
-                        : (int)   round(max($cfg['min'], min($cfg['max'], (float) $Value)));
+                    $val = $var['VariableType'] === VARIABLETYPE_FLOAT
+                        ? (float) $absoluteValue
+                        : (int) round($absoluteValue);
                     RequestAction($varID, $val);
                 }
                 break;
@@ -90,12 +104,12 @@ class RolloKachel extends IPSModule
     public function GetVisualizationTile()
     {
         $posCfg = $this->GetVarConfig($this->ReadPropertyInteger('PositionID'));
+        $range  = $posCfg['max'] - $posCfg['min'];
+        $stepPct = ($range > 0) ? round($posCfg['step'] / $range * 100, 4) : 1.0;
+        $stepPct = max(0.01, $stepPct);
 
-        $configJson = json_encode([
-            'min'    => $posCfg['min'],
-            'max'    => $posCfg['max'],
-            'step'   => $posCfg['step'],
-            'invert' => $this->ReadPropertyBoolean('Invert'),
+        $configJson      = json_encode([
+            'step' => $stepPct,
         ]);
         $dataJsonLiteral = json_encode(json_encode($this->GetCurrentData()));
 
@@ -115,7 +129,6 @@ class RolloKachel extends IPSModule
             return $config;
         }
 
-        // Priorität 2: Variablen-Profil (Custom hat Vorrang)
         $var         = IPS_GetVariable($varID);
         $profileName = $var['VariableCustomProfile'] !== ''
             ? $var['VariableCustomProfile']
@@ -130,7 +143,6 @@ class RolloKachel extends IPSModule
             }
         }
 
-        // Priorität 1: IPS 7 Variablen-Darstellung (höchste Priorität)
         if (function_exists('IPS_GetVariablePresentation')) {
             $pres = IPS_GetVariablePresentation($varID);
             if (is_array($pres)) {
@@ -168,24 +180,22 @@ class RolloKachel extends IPSModule
             'slats'    => null,
             'presets'  => $presets,
             'colors'   => [
-                'accent'  => $this->ReadPropertyInteger('ColorAccent'),
+                'accent' => $this->ReadPropertyInteger('ColorAccent'),
             ],
         ];
 
         $positionID = $this->ReadPropertyInteger('PositionID');
         if ($positionID > 0 && IPS_VariableExists($positionID)) {
-            $var = IPS_GetVariable($positionID);
-            $data['position'] = $var['VariableType'] === 2
-                ? round((float) GetValue($positionID), 1)
-                : (int) GetValue($positionID);
+            $dimVal = self::getDimValue($positionID);
+            if ($this->ReadPropertyBoolean('Invert')) {
+                $dimVal = 100 - $dimVal;
+            }
+            $data['position'] = round($dimVal, 1);
         }
 
         $slatsID = $this->ReadPropertyInteger('SlatsID');
         if ($slatsID > 0 && IPS_VariableExists($slatsID)) {
-            $var = IPS_GetVariable($slatsID);
-            $data['slats'] = $var['VariableType'] === 2
-                ? round((float) GetValue($slatsID), 1)
-                : (int) GetValue($slatsID);
+            $data['slats'] = round(self::getDimValue($slatsID), 1);
         }
 
         return $data;

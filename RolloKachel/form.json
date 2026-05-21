@@ -18,7 +18,7 @@
         {
             "name": "PositionID",
             "type": "SelectVariable",
-            "caption": "Position (0–100 %)",
+            "caption": "Position (beliebiger Bereich, wird automatisch auf 0–100 % normiert)",
             "validVariableTypes": [
                 1,
                 2
@@ -62,10 +62,10 @@
                 {
                     "name": "Preset1Value",
                     "type": "NumberSpinner",
-                    "caption": "Position",
-                    "minimum": -99999,
-                    "maximum": 99999,
-                    "digits": 1,
+                    "caption": "Position (%)",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "digits": 0,
                     "value": 0
                 }
             ]
@@ -82,10 +82,10 @@
                 {
                     "name": "Preset2Value",
                     "type": "NumberSpinner",
-                    "caption": "Position",
-                    "minimum": -99999,
-                    "maximum": 99999,
-                    "digits": 1,
+                    "caption": "Position (%)",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "digits": 0,
                     "value": 0
                 }
             ]
@@ -102,10 +102,10 @@
                 {
                     "name": "Preset3Value",
                     "type": "NumberSpinner",
-                    "caption": "Position",
-                    "minimum": -99999,
-                    "maximum": 99999,
-                    "digits": 1,
+                    "caption": "Position (%)",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "digits": 0,
                     "value": 0
                 }
             ]
@@ -122,10 +122,10 @@
                 {
                     "name": "Preset4Value",
                     "type": "NumberSpinner",
-                    "caption": "Position",
-                    "minimum": -99999,
-                    "maximum": 99999,
-                    "digits": 1,
+                    "caption": "Position (%)",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "digits": 0,
                     "value": 0
                 }
             ]
