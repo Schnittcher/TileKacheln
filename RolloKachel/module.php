@@ -14,6 +14,8 @@ class RolloKachel extends IPSModule
         $this->RegisterPropertyInteger('PositionID', 0);
         $this->RegisterPropertyBoolean('Invert', false);
         $this->RegisterPropertyInteger('SlatsID', 0);
+        $this->RegisterPropertyInteger('StopID', 0);
+        $this->RegisterPropertyInteger('StopValue', 1);
         $this->RegisterPropertyInteger('ColorAccent', 2201331);
 
         $this->RegisterPropertyString('Preset1Label', '');
@@ -81,6 +83,13 @@ class RolloKachel extends IPSModule
                         ? (float) $absoluteValue
                         : (int) round($absoluteValue);
                     RequestAction($varID, $val);
+                }
+                break;
+
+            case 'SetStop':
+                $varID = $this->ReadPropertyInteger('StopID');
+                if ($varID > 0 && IPS_VariableExists($varID)) {
+                    RequestAction($varID, (bool) $this->ReadPropertyInteger('StopValue'));
                 }
                 break;
 
@@ -193,12 +202,17 @@ class RolloKachel extends IPSModule
             }
         }
 
+        $stopID        = $this->ReadPropertyInteger('StopID');
+        $stopAvailable = $stopID > 0 && IPS_VariableExists($stopID);
+
         $data = [
-            'name'     => $this->ReadPropertyString('TileName'),
-            'position' => null,
-            'slats'    => null,
-            'presets'  => $presets,
-            'colors'   => [
+            'name'          => $this->ReadPropertyString('TileName'),
+            'position'      => null,
+            'slats'         => null,
+            'presets'       => $presets,
+            'stopAvailable' => $stopAvailable,
+            'stopValue'     => (bool) $this->ReadPropertyInteger('StopValue'),
+            'colors'        => [
                 'accent' => $this->ReadPropertyInteger('ColorAccent'),
             ],
         ];

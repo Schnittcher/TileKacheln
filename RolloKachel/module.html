@@ -199,6 +199,8 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 // invert is handled server-side; JS only deals with the normalised percentage
 var _currentPos   = null;
 var _currentSlats = null;
+var _stopAvailable = false;
+var _stopValue     = true;
 
 function intToHex(n) {
   return '#' + ('000000' + n.toString(16)).slice(-6);
@@ -206,6 +208,8 @@ function intToHex(n) {
 
 function handleMessage(jsonStr) {
   var d = JSON.parse(jsonStr);
+  _stopAvailable = !!d.stopAvailable;
+  _stopValue     = !!d.stopValue;
   var colors = d.colors || {};
   var accentInt = colors.accent || 2201331;
   var r = (accentInt >> 16) & 0xff;
@@ -278,8 +282,8 @@ function sendClose() {
 }
 
 function sendStop() {
-  if (_currentPos === null) return;
-  if (typeof requestAction !== 'undefined') requestAction("SetPosition", _currentPos);
+  if (!_stopAvailable) return;
+  if (typeof requestAction !== 'undefined') requestAction("SetStop", _stopValue ? 1 : 0);
 }
 
 function sendPreset(val, displayVal) {

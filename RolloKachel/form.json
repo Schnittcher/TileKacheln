@@ -44,6 +44,41 @@
         {
             "type": "Label",
             "bold": true,
+            "caption": "Stopp-Button"
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "name": "StopID",
+                    "type": "SelectVariable",
+                    "caption": "Stopp-Variable (optional, Boolean)",
+                    "validVariableTypes": [
+                        0
+                    ],
+                    "value": 0
+                },
+                {
+                    "name": "StopValue",
+                    "type": "Select",
+                    "caption": "Übermittelter Wert beim Stopp",
+                    "options": [
+                        {
+                            "caption": "true (1)",
+                            "value": 1
+                        },
+                        {
+                            "caption": "false (0)",
+                            "value": 0
+                        }
+                    ],
+                    "value": 1
+                }
+            ]
+        },
+        {
+            "type": "Label",
+            "bold": true,
             "caption": "Vorwahl-Buttons (optional)"
         },
         {
