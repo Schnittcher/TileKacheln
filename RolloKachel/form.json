@@ -52,10 +52,12 @@
                 {
                     "name": "StopID",
                     "type": "SelectVariable",
-                    "caption": "Stopp-Variable (optional, Boolean)",
+                    "caption": "Stopp-Variable (optional, Boolean/Integer)",
                     "validVariableTypes": [
-                        0
+                        0,
+                        1
                     ],
+                    "onChange": "RK_UpdateStopValueOptions($id, $StopID);",
                     "value": 0
                 },
                 {

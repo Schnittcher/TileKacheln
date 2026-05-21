@@ -16,6 +16,7 @@ class RolloKachel extends IPSModule
         $this->RegisterPropertyInteger('SlatsID', 0);
         $this->RegisterPropertyInteger('StopID', 0);
         $this->RegisterPropertyInteger('StopValue', 1);
+        $this->RegisterAttributeInteger('StopVariableType', VARIABLETYPE_BOOLEAN);
         $this->RegisterPropertyInteger('ColorAccent', 2201331);
 
         $this->RegisterPropertyString('Preset1Label', '');
@@ -55,6 +56,7 @@ class RolloKachel extends IPSModule
 
         $this->SetStatus($anyLinked ? 102 : 201);
         $this->UpdateVisualizationValue(json_encode($this->GetCurrentData()));
+        $this->UpdateStopValueOptions($this->ReadPropertyInteger('StopID'));
     }
 
     public function MessageSink($TimeStamp, $SenderID, $Message, $Data)
@@ -89,7 +91,9 @@ class RolloKachel extends IPSModule
             case 'SetStop':
                 $varID = $this->ReadPropertyInteger('StopID');
                 if ($varID > 0 && IPS_VariableExists($varID)) {
-                    RequestAction($varID, (bool) $this->ReadPropertyInteger('StopValue'));
+                    $stopVal = $this->ReadPropertyInteger('StopValue');
+                    $type    = $this->ReadAttributeInteger('StopVariableType');
+                    RequestAction($varID, $type === VARIABLETYPE_BOOLEAN ? (bool) $stopVal : (int) $stopVal);
                 }
                 break;
 
@@ -123,6 +127,40 @@ class RolloKachel extends IPSModule
                 }
                 break;
         }
+    }
+
+    public function UpdateStopValueOptions($stopID = null)
+    {
+        $stopID = ($stopID !== null) ? (int) $stopID : $this->ReadPropertyInteger('StopID');
+
+        if ($stopID > 0 && IPS_VariableExists($stopID)) {
+            $var = IPS_GetVariable($stopID);
+            $this->WriteAttributeInteger('StopVariableType', $var['VariableType']);
+        } else {
+            $this->WriteAttributeInteger('StopVariableType', VARIABLETYPE_BOOLEAN);
+        }
+
+        $options = $this->BuildStopOptions($stopID);
+        $this->UpdateFormField('StopValue', 'options', json_encode($options));
+    }
+
+    public function GetConfigurationForm(): string
+    {
+        $form    = json_decode(file_get_contents(__DIR__ . '/form.json'), true);
+        $options = $this->BuildStopOptions($this->ReadPropertyInteger('StopID'));
+
+        foreach ($form['elements'] as &$element) {
+            if (!isset($element['items'])) {
+                continue;
+            }
+            foreach ($element['items'] as &$item) {
+                if (isset($item['name']) && $item['name'] === 'StopValue') {
+                    $item['options'] = $options;
+                }
+            }
+        }
+
+        return json_encode($form);
     }
 
     public function GetVisualizationTile()
@@ -232,5 +270,49 @@ class RolloKachel extends IPSModule
         }
 
         return $data;
+    }
+
+    private function BuildStopOptions(int $varID): array
+    {
+        $bool = [
+            ['caption' => 'true (1)', 'value' => 1],
+            ['caption' => 'false (0)', 'value' => 0],
+        ];
+
+        if ($varID <= 0 || !IPS_VariableExists($varID)) {
+            return $bool;
+        }
+
+        $var = IPS_GetVariable($varID);
+
+        if ($var['VariableType'] === VARIABLETYPE_BOOLEAN) {
+            return $bool;
+        }
+
+        // Integer: Priorität 1 – IPS 7 Variablendarstellung
+        $options = [];
+        if (function_exists('IPS_GetVariablePresentation')) {
+            $pres = IPS_GetVariablePresentation($varID);
+            if (!empty($pres['OPTIONS'])) {
+                $opts = json_decode($pres['OPTIONS'], true);
+                if (is_array($opts)) {
+                    foreach ($opts as $opt) {
+                        $options[] = ['caption' => $opt['Caption'], 'value' => (int) $opt['Value']];
+                    }
+                }
+            }
+        }
+
+        // Priorität 2 – Custom Profile / Standard Profile
+        if (empty($options)) {
+            $profileName = $var['VariableCustomProfile'] !== '' ? $var['VariableCustomProfile'] : $var['VariableProfile'];
+            if ($profileName !== '' && IPS_VariableProfileExists($profileName)) {
+                foreach (IPS_GetVariableProfile($profileName)['Associations'] as $assoc) {
+                    $options[] = ['caption' => $assoc['Name'], 'value' => (int) $assoc['Value']];
+                }
+            }
+        }
+
+        return empty($options) ? $bool : $options;
     }
 }
