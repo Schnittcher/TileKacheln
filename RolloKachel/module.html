@@ -39,30 +39,41 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
   font-size:1.08em;font-weight:500;color:var(--text-sub,#8C9BAB);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
+
+/* ── Main row: buttons left, shutter right ───────── */
+.main-row{
+  display:flex;flex:1 1 auto;gap:0.67em;min-height:0;
+  margin-bottom:0.5em;
+}
+
+/* ── Action buttons (vertical list) ─────────────── */
+.action-btns{
+  display:flex;flex-direction:column;gap:0.5em;
+  justify-content:center;align-items:center;align-self:stretch;
+  flex:0 0 30%;
+}
+.action-btn{
+  width:2.4em;height:2.4em;border-radius:0.75em;
+  border:1px solid var(--c-btn-border);background:var(--c-btn-bg);
+  color:var(--text,#fff);font-size:1em;cursor:pointer;
+  transition:background .15s,transform .1s;outline:none;
+  display:flex;align-items:center;justify-content:center;
+}
+.action-btn:hover{background:var(--c-hover)}
+.action-btn:active{transform:scale(.94)}
+
 /* ── Shutter SVG ─────────────────────────────────── */
 .shutter-wrap{
-  flex:1 1 4em;min-height:4em;
+  flex:1 1 auto;min-height:4em;min-width:0;
   display:flex;align-items:stretch;
   padding:0.33em 0;
 }
 .shutter-svg{display:block;flex:1;min-height:0;min-width:0;}
 
-/* ── Quick-Buttons ───────────────────────────────── */
-.quick-btns{display:flex;gap:0.67em;margin-bottom:0.5em}
-.quick-btn{
-  flex:1;padding:0.58em 0;border-radius:0.75em;
-  border:1px solid var(--c-btn-border);background:var(--c-btn-bg);
-  color:var(--text,#fff);font-size:1.08em;cursor:pointer;
-  transition:background .15s,transform .1s;outline:none;
-  display:flex;align-items:center;justify-content:center;gap:0.33em;
-}
-.quick-btn:hover{background:var(--c-hover)}
-.quick-btn:active{transform:scale(.94)}
-
 /* ── Preset-Buttons ──────────────────────────────── */
 .preset-btns{display:flex;gap:0.5em;margin-bottom:0.5em}
 .preset-btn{
-  flex:1;min-width:0;padding:0.42em 0.25em;border-radius:0.67em;
+  flex:1;min-width:0;padding:0.6em 0.5em;border-radius:0.67em;
   border:1px solid var(--c-btn-border);background:var(--c-btn-bg);
   color:var(--text,#fff);font-size:0.92em;cursor:pointer;
   transition:background .15s,transform .1s;outline:none;
@@ -112,43 +123,38 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 
   <div class="header">
     <span class="tile-name" id="tile-name"></span>
-</div>
-
-  <!-- Shutter visual -->
-  <div class="shutter-wrap">
-    <svg class="shutter-svg" viewBox="0 0 120 96" preserveAspectRatio="xMidYMid meet">
-      <defs>
-        <clipPath id="blind-clip">
-          <rect id="blind-clip-rect" x="10" y="5" width="100" height="0"/>
-        </clipPath>
-      </defs>
-      <!-- Window background (open area) -->
-      <rect x="10" y="5" width="100" height="82" rx="3" fill="rgba(0,0,0,0.35)"/>
-      <!-- Blind fill (descends from top, clipped) -->
-      <rect x="10" y="5" width="100" height="82" rx="3"
-            style="fill:var(--accent-bg)" clip-path="url(#blind-clip)"/>
-      <!-- Slat lines (clipped to blind area) -->
-      <g clip-path="url(#blind-clip)" style="stroke:var(--accent)" stroke-width="1.2" opacity="0.6">
-        <line x1="14" y1="17" x2="106" y2="17"/>
-        <line x1="14" y1="29" x2="106" y2="29"/>
-        <line x1="14" y1="41" x2="106" y2="41"/>
-        <line x1="14" y1="53" x2="106" y2="53"/>
-        <line x1="14" y1="65" x2="106" y2="65"/>
-        <line x1="14" y1="77" x2="106" y2="77"/>
-      </g>
-      <!-- Window frame -->
-      <rect x="10" y="5" width="100" height="82" rx="3"
-            fill="none" style="stroke:var(--c-border)" stroke-width="1.5"/>
-      <!-- Bottom sill -->
-      <rect x="4" y="86" width="112" height="5" rx="2.5" style="fill:var(--c-sill)"/>
-    </svg>
   </div>
 
-  <!-- Quick-Buttons -->
-  <div class="quick-btns">
-    <button class="quick-btn" onclick="sendOpen()">&#8593; Auf</button>
-    <button class="quick-btn" onclick="sendStop()">&#9632; Stopp</button>
-    <button class="quick-btn" onclick="sendClose()">&#8595; Zu</button>
+  <!-- Main row: action buttons left, shutter SVG right -->
+  <div class="main-row">
+    <div class="action-btns">
+      <button class="action-btn" title="Auf" onclick="sendOpen()">&#8593;</button>
+      <button class="action-btn" title="Stopp" onclick="sendStop()">&#9632;</button>
+      <button class="action-btn" title="Zu" onclick="sendClose()">&#8595;</button>
+    </div>
+    <div class="shutter-wrap">
+      <svg class="shutter-svg" viewBox="0 0 120 96" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <clipPath id="blind-clip">
+            <rect id="blind-clip-rect" x="10" y="5" width="100" height="0"/>
+          </clipPath>
+        </defs>
+        <rect x="10" y="5" width="100" height="82" rx="3" fill="rgba(0,0,0,0.35)"/>
+        <rect x="10" y="5" width="100" height="82" rx="3"
+              style="fill:var(--accent-bg)" clip-path="url(#blind-clip)"/>
+        <g clip-path="url(#blind-clip)" style="stroke:var(--accent)" stroke-width="1.2" opacity="0.6">
+          <line x1="14" y1="17" x2="106" y2="17"/>
+          <line x1="14" y1="29" x2="106" y2="29"/>
+          <line x1="14" y1="41" x2="106" y2="41"/>
+          <line x1="14" y1="53" x2="106" y2="53"/>
+          <line x1="14" y1="65" x2="106" y2="65"/>
+          <line x1="14" y1="77" x2="106" y2="77"/>
+        </g>
+        <rect x="10" y="5" width="100" height="82" rx="3"
+              fill="none" style="stroke:var(--c-border)" stroke-width="1.5"/>
+        <rect x="4" y="86" width="112" height="5" rx="2.5" style="fill:var(--c-sill)"/>
+      </svg>
+    </div>
   </div>
 
   <!-- Position Feinsteuerung -->
@@ -190,13 +196,10 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
     var bs=e[0].borderBoxSize&&e[0].borderBoxSize[0];
     var w=bs?bs.inlineSize:t.offsetWidth;
     var h=bs?bs.blockSize:t.offsetHeight;
-    // RolloKachel hat viele Controls → Höhe begrenzt, Breite verhindert Überlauf
     t.style.fontSize=Math.max(10,Math.min(20,h/25,w/16)).toFixed(2)+'px';
   }).observe(t);
 })();
 
-// position and slats are always 0-100 % (normalised by PHP via HelperDimDevice)
-// invert is handled server-side; JS only deals with the normalised percentage
 var _currentPos   = null;
 var _currentSlats = null;
 var _stopAvailable = false;
@@ -264,13 +267,11 @@ function handleMessage(jsonStr) {
   }
 }
 
-// pos is always 0 (open) … 100 (closed)
 function setShutterPos(pos) {
   var pct = Math.max(0, Math.min(100, pos)) / 100;
   document.getElementById("blind-clip-rect").setAttribute("height", (pct * 82).toFixed(1));
 }
 
-// PHP invert-flag already applied → 0 is always "open", 100 is always "closed"
 function sendOpen() {
   _setPos(0);
   if (typeof requestAction !== 'undefined') requestAction("SetPosition", 0);
@@ -347,11 +348,12 @@ if (typeof requestAction === 'undefined') {
   _config = {step: 10};
   handleMessage(JSON.stringify({
     name: 'Wohnzimmer Rollo', position: 65, slats: 30,
+    stopAvailable: true, stopValue: true,
     presets: [
-      {label: 'Lüften', value: 10},
-      {label: 'Halb',   value: 50},
-      {label: 'Nacht',  value: 80},
-      {label: 'Zu',     value: 100}
+      {label: 'Lüften', value: 10, display: 10},
+      {label: 'Halb',   value: 50, display: 50},
+      {label: 'Nacht',  value: 80, display: 80},
+      {label: 'Zu',     value: 100, display: 100}
     ],
     colors: {accent: 2201331}
   }));
