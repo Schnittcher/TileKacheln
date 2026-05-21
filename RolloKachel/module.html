@@ -239,7 +239,7 @@ function handleMessage(jsonStr) {
       btn.className = "preset-btn";
       btn.textContent = p.label;
       btn.title = p.value + "%";
-      btn.onclick = function() { sendPreset(p.value); };
+      btn.onclick = (function(v, d) { return function() { sendPreset(v, d); }; })(p.value, p.display);
       presetBtns.appendChild(btn);
     });
     presetBtns.style.removeProperty("display");
@@ -282,9 +282,9 @@ function sendStop() {
   if (typeof requestAction !== 'undefined') requestAction("SetPosition", _currentPos);
 }
 
-function sendPreset(val) {
-  _setPos(val);
-  if (typeof requestAction !== 'undefined') requestAction("SetPosition", val);
+function sendPreset(val, displayVal) {
+  _setPos(displayVal !== undefined ? displayVal : val);
+  if (typeof requestAction !== 'undefined') requestAction("SetPreset", val);
 }
 
 function adjustPos(dir) {

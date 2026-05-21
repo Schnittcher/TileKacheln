@@ -84,6 +84,21 @@ class RolloKachel extends IPSModule
                 }
                 break;
 
+            case 'SetPreset':
+                $varID = $this->ReadPropertyInteger('PositionID');
+                if ($varID > 0 && IPS_VariableExists($varID)) {
+                    $absoluteValue = self::percentToAbsolute($varID, (float) $Value);
+                    if ($absoluteValue === false) {
+                        break;
+                    }
+                    $var = IPS_GetVariable($varID);
+                    $val = $var['VariableType'] === VARIABLETYPE_FLOAT
+                        ? (float) $absoluteValue
+                        : (int) round($absoluteValue);
+                    RequestAction($varID, $val);
+                }
+                break;
+
             case 'SetSlats':
                 $varID = $this->ReadPropertyInteger('SlatsID');
                 if ($varID > 0 && IPS_VariableExists($varID)) {
@@ -168,13 +183,12 @@ class RolloKachel extends IPSModule
         for ($i = 1; $i <= 4; $i++) {
             $label = $this->ReadPropertyString('Preset' . $i . 'Label');
             if ($label !== '') {
-                $val = $this->ReadPropertyFloat('Preset' . $i . 'Value');
-                if ($invert) {
-                    $val = 100.0 - $val;
-                }
+                $pct  = $this->ReadPropertyFloat('Preset' . $i . 'Value');
+                $disp = $invert ? (100.0 - $pct) : $pct;
                 $presets[] = [
-                    'label' => $label,
-                    'value' => round($val, 1),
+                    'label'   => $label,
+                    'value'   => round($pct,  1),
+                    'display' => round($disp, 1),
                 ];
             }
         }
