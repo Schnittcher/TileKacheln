@@ -163,13 +163,18 @@ class RolloKachel extends IPSModule
 
     private function GetCurrentData(): array
     {
+        $invert  = $this->ReadPropertyBoolean('Invert');
         $presets = [];
         for ($i = 1; $i <= 4; $i++) {
             $label = $this->ReadPropertyString('Preset' . $i . 'Label');
             if ($label !== '') {
+                $val = $this->ReadPropertyFloat('Preset' . $i . 'Value');
+                if ($invert) {
+                    $val = 100.0 - $val;
+                }
                 $presets[] = [
                     'label' => $label,
-                    'value' => $this->ReadPropertyFloat('Preset' . $i . 'Value'),
+                    'value' => round($val, 1),
                 ];
             }
         }
