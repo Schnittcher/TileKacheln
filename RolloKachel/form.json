@@ -42,6 +42,15 @@
             "value": 0
         },
         {
+            "name": "AutomatikID",
+            "type": "SelectVariable",
+            "caption": "Automatik (optional, Boolean)",
+            "validVariableTypes": [
+                0
+            ],
+            "value": 0
+        },
+        {
             "type": "Label",
             "bold": true,
             "caption": "Stopp-Button"

@@ -14,6 +14,7 @@ class RolloKachel extends IPSModule
         $this->RegisterPropertyInteger('PositionID', 0);
         $this->RegisterPropertyBoolean('Invert', false);
         $this->RegisterPropertyInteger('SlatsID', 0);
+        $this->RegisterPropertyInteger('AutomatikID', 0);
         $this->RegisterPropertyInteger('StopID', 0);
         $this->RegisterPropertyInteger('StopValue', 1);
         $this->RegisterAttributeInteger('StopVariableType', VARIABLETYPE_BOOLEAN);
@@ -47,7 +48,7 @@ class RolloKachel extends IPSModule
         }
 
         $anyLinked = false;
-        foreach ([$this->ReadPropertyInteger('PositionID'), $this->ReadPropertyInteger('SlatsID')] as $varID) {
+        foreach ([$this->ReadPropertyInteger('PositionID'), $this->ReadPropertyInteger('SlatsID'), $this->ReadPropertyInteger('AutomatikID')] as $varID) {
             if ($varID > 0 && IPS_VariableExists($varID)) {
                 $this->RegisterMessage($varID, VM_UPDATE);
                 $anyLinked = true;
@@ -109,6 +110,13 @@ class RolloKachel extends IPSModule
                         ? (float) $absoluteValue
                         : (int) round($absoluteValue);
                     RequestAction($varID, $val);
+                }
+                break;
+
+            case 'SetAutomatik':
+                $varID = $this->ReadPropertyInteger('AutomatikID');
+                if ($varID > 0 && IPS_VariableExists($varID)) {
+                    RequestAction($varID, (bool)(int) $Value);
                 }
                 break;
 
@@ -240,6 +248,11 @@ class RolloKachel extends IPSModule
             }
         }
 
+        $automatikID = $this->ReadPropertyInteger('AutomatikID');
+        $automatik   = ($automatikID > 0 && IPS_VariableExists($automatikID))
+            ? (bool) GetValue($automatikID)
+            : null;
+
         $stopID        = $this->ReadPropertyInteger('StopID');
         $stopAvailable = $stopID > 0 && IPS_VariableExists($stopID);
 
@@ -248,6 +261,7 @@ class RolloKachel extends IPSModule
             'position'      => null,
             'slats'         => null,
             'presets'       => $presets,
+            'automatik'     => $automatik,
             'stopAvailable' => $stopAvailable,
             'stopValue'     => (bool) $this->ReadPropertyInteger('StopValue'),
             'colors'        => [

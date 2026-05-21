@@ -61,6 +61,10 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 }
 .action-btn:hover{background:var(--c-hover)}
 .action-btn:active{transform:scale(.94)}
+.action-btn.is-on{
+  background:color-mix(in srgb,var(--accent,#2196F3) 25%,transparent);
+  border-color:var(--accent,#2196F3);
+}
 
 /* ── Shutter SVG ─────────────────────────────────── */
 .shutter-wrap{
@@ -131,6 +135,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
       <button class="action-btn" title="Auf" onclick="sendOpen()">&#8593;</button>
       <button class="action-btn" title="Stopp" onclick="sendStop()">&#9632;</button>
       <button class="action-btn" title="Zu" onclick="sendClose()">&#8595;</button>
+      <button class="action-btn" id="auto-btn" title="Automatik" onclick="sendAutomatik()" style="display:none">&#9881;</button>
     </div>
     <div class="shutter-wrap">
       <svg class="shutter-svg" viewBox="0 0 120 96" preserveAspectRatio="xMidYMid meet">
@@ -200,8 +205,9 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
   }).observe(t);
 })();
 
-var _currentPos   = null;
-var _currentSlats = null;
+var _currentPos    = null;
+var _currentSlats  = null;
+var _automatik     = null;
 var _stopAvailable = false;
 var _stopValue     = true;
 
@@ -213,6 +219,16 @@ function handleMessage(jsonStr) {
   var d = JSON.parse(jsonStr);
   _stopAvailable = !!d.stopAvailable;
   _stopValue     = !!d.stopValue;
+
+  var autoBtn = document.getElementById("auto-btn");
+  if (d.automatik !== null && d.automatik !== undefined) {
+    _automatik = !!d.automatik;
+    autoBtn.classList.toggle('is-on', _automatik);
+    autoBtn.style.removeProperty('display');
+  } else {
+    _automatik = null;
+    autoBtn.style.display = 'none';
+  }
   var colors = d.colors || {};
   var accentInt = colors.accent || 2201331;
   var r = (accentInt >> 16) & 0xff;
@@ -282,6 +298,13 @@ function sendClose() {
   if (typeof requestAction !== 'undefined') requestAction("SetPosition", 100);
 }
 
+function sendAutomatik() {
+  if (_automatik === null) return;
+  _automatik = !_automatik;
+  document.getElementById('auto-btn').classList.toggle('is-on', _automatik);
+  if (typeof requestAction !== 'undefined') requestAction("SetAutomatik", _automatik ? 1 : 0);
+}
+
 function sendStop() {
   if (!_stopAvailable) return;
   if (typeof requestAction !== 'undefined') requestAction("SetStop", _stopValue ? 1 : 0);
@@ -348,7 +371,7 @@ if (typeof requestAction === 'undefined') {
   _config = {step: 10};
   handleMessage(JSON.stringify({
     name: 'Wohnzimmer Rollo', position: 65, slats: 30,
-    stopAvailable: true, stopValue: true,
+    automatik: true, stopAvailable: true, stopValue: true,
     presets: [
       {label: 'Lüften', value: 10, display: 10},
       {label: 'Halb',   value: 50, display: 50},
