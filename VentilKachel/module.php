@@ -160,6 +160,7 @@ class VentilKachel extends IPSModule
             'positionEditable' => false,
             'positionMin'      => 0.0,
             'positionMax'      => 100.0,
+            'positionStep'     => 1.0,
             'positionSuffix'   => ' %',
             'positionDigits'   => 0,
             'status'           => null,
@@ -191,6 +192,7 @@ class VentilKachel extends IPSModule
             $data['positionEditable'] = HasAction($posID);
             $data['positionMin']      = $profile['min'];
             $data['positionMax']      = $profile['max'];
+            $data['positionStep']     = $profile['step'];
             $data['positionSuffix']   = $profile['suffix'] !== '' ? ' ' . $profile['suffix'] : ' %';
             $data['positionDigits']   = $profile['digits'];
         }

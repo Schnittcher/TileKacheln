@@ -56,12 +56,9 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 }
 .status-badge.editable{cursor:pointer}
 .status-badge.editable:hover{opacity:.8}
-.temp-badge{
-  font-size:1em;color:var(--text-sub);
-  white-space:nowrap;flex-shrink:0;
-  display:none;
+#temp-svg{
+  font-family:inherit;
 }
-.temp-badge.visible{display:block}
 
 /* ── Main Content ─────────────────────────────────── */
 .main-area{
@@ -90,18 +87,49 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
   color:var(--accent);
   transition:color .3s;
 }
-.pos-bar-wrap{
-  height:0.3em;border-radius:1em;
-  background:var(--accent-bg);
-  overflow:hidden;margin:0.28em 0.75em 0;
-  transition:background .3s;
+/* ── Slider ───────────────────────────────────────── */
+.slider-row{
+  display:flex;align-items:center;gap:0.5em;
+  margin-top:0.2em;
 }
-.pos-bar{
-  height:100%;border-radius:1em;
-  background:var(--accent);
-  transition:width .5s ease, background .3s;
-  will-change:width;
+.pos-slider{
+  -webkit-appearance:none;appearance:none;
+  flex:1;height:0.28em;border-radius:1em;outline:none;cursor:pointer;
+  background:linear-gradient(to right,
+    var(--accent) var(--fill-pct,0%),
+    var(--accent-bg) var(--fill-pct,0%));
+  transition:background .15s;
 }
+.pos-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:1.05em;height:1.05em;border-radius:50%;
+  background:var(--accent);cursor:pointer;
+  box-shadow:0 1px 5px rgba(0,0,0,.45);
+  transition:transform .1s;
+}
+.pos-slider:active:not(:disabled)::-webkit-slider-thumb{transform:scale(1.18)}
+.pos-slider::-moz-range-track{
+  height:0.28em;border-radius:1em;
+  background:linear-gradient(to right,
+    var(--accent) var(--fill-pct,0%),
+    var(--accent-bg) var(--fill-pct,0%));
+}
+.pos-slider::-moz-range-thumb{
+  width:1.05em;height:1.05em;border-radius:50%;
+  background:var(--accent);border:none;cursor:pointer;
+}
+.pos-slider:disabled{opacity:.35;cursor:default;pointer-events:none}
+.sp-btn{
+  width:1.75em;aspect-ratio:1;border-radius:50%;flex-shrink:0;
+  border:1px solid var(--c-btn-border);background:var(--c-btn-bg);
+  color:var(--text);font-size:1.1em;line-height:1;
+  cursor:pointer;outline:none;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,transform .1s;
+}
+.sp-btn:hover:not(:disabled){background:var(--c-hover)}
+.sp-btn:active:not(:disabled){transform:scale(.88)}
+.sp-btn:disabled{opacity:.35;cursor:default;pointer-events:none}
 
 /* ── Preset Buttons ───────────────────────────────── */
 .preset-row{
@@ -148,7 +176,6 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
   <div class="header">
     <span class="tile-name" id="tile-name">Ventil</span>
     <span class="status-badge" id="status-badge" onclick="toggleStatus()">––</span>
-    <span class="temp-badge"   id="temp-badge"></span>
   </div>
 
   <div class="main-area">
@@ -220,13 +247,24 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
         <!-- ⑥ Drehpunkt ──────────────────────────────── -->
         <circle cx="60" cy="36" r="2.8" fill="var(--accent)"/>
 
+        <!-- ⑦ Temperatur über rechtem Rohr (optional) -->
+        <text id="temp-svg" x="98.5" y="22.5"
+              text-anchor="middle" font-size="8"
+              fill="var(--text-sub)" display="none"></text>
+
       </svg>
     </div>
 
     <div class="pos-section">
       <div class="pos-value" id="pos-value">–</div>
-      <div class="pos-bar-wrap">
-        <div class="pos-bar" id="pos-bar" style="width:0%"></div>
+      <div class="slider-row">
+        <button class="sp-btn" id="pos-minus" onclick="stepPos(-1)" disabled>&#8722;</button>
+        <input type="range" id="pos-slider" class="pos-slider"
+               min="0" max="100" step="1" value="0"
+               oninput="onSliderInput(this.value)"
+               onchange="onSliderChange(this.value)"
+               disabled/>
+        <button class="sp-btn" id="pos-plus" onclick="stepPos(1)" disabled>&#43;</button>
       </div>
     </div>
 
@@ -256,15 +294,16 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
   }).observe(t);
 })();
 
-var _presets      = [{name:'Zu',value:0},{name:'25 %',value:25},{name:'50 %',value:50},{name:'Auf',value:100}];
-var _posEditable  = false;
+var _presets        = [{name:'Zu',value:0},{name:'25 %',value:25},{name:'50 %',value:50},{name:'Auf',value:100}];
+var _posEditable    = false;
 var _statusEditable = false;
-var _currentPos   = null;
-var _currentStatus = null;
-var _posMin       = 0;
-var _posMax       = 100;
-var _posDigits    = 0;
-var _posSuffix    = ' %';
+var _currentPos     = null;
+var _currentStatus  = null;
+var _posMin         = 0;
+var _posMax         = 100;
+var _posStep        = 1;
+var _posDigits      = 0;
+var _posSuffix      = ' %';
 
 function intToHex(n){
   return '#'+('000000'+n.toString(16)).slice(-6);
@@ -338,37 +377,45 @@ function handleMessage(jsonStr){
     badge.classList.remove('visible');
   }
 
-  // Temperatur
-  var tempEl=document.getElementById('temp-badge');
+  // Temperatur (SVG-Text über rechtem Rohr)
+  var tempSvg=document.getElementById('temp-svg');
   if(d.temperature!==null&&d.temperature!==undefined){
-    tempEl.textContent=d.temperature.toFixed(1)+(d.tempSuffix||'°C');
-    tempEl.classList.add('visible');
+    tempSvg.textContent=d.temperature.toFixed(1)+(d.tempSuffix||'°C');
+    tempSvg.removeAttribute('display');
   } else {
-    tempEl.classList.remove('visible');
+    tempSvg.setAttribute('display','none');
   }
 
   // Positions-Konfiguration
   _posMin     = d.positionMin    !=null ? d.positionMin    : 0;
   _posMax     = d.positionMax    !=null ? d.positionMax    : 100;
+  _posStep    = d.positionStep   !=null ? d.positionStep   : 1;
   _posDigits  = d.positionDigits !=null ? d.positionDigits : 0;
   _posSuffix  = d.positionSuffix !=null ? d.positionSuffix : ' %';
   _posEditable= d.positionEditable===true;
 
+  var slider=document.getElementById('pos-slider');
+  slider.min=_posMin; slider.max=_posMax; slider.step=_posStep;
+  slider.disabled=!_posEditable;
+  document.getElementById('pos-minus').disabled=!_posEditable;
+  document.getElementById('pos-plus').disabled=!_posEditable;
+
   // Positionsanzeige
   var posEl=document.getElementById('pos-value');
-  var barEl=document.getElementById('pos-bar');
 
   if(d.position!==null&&d.position!==undefined){
     _currentPos=parseFloat(d.position);
     var pct=normalizePct(_currentPos);
     posEl.textContent=_currentPos.toFixed(_posDigits)+_posSuffix;
-    barEl.style.width=pct.toFixed(1)+'%';
+    slider.value=_currentPos;
+    slider.style.setProperty('--fill-pct',pct.toFixed(1)+'%');
     updateValveAngle(pct);
     updateActivePresets(_currentPos);
   } else {
     _currentPos=null;
     posEl.textContent='–';
-    barEl.style.width='0%';
+    slider.value=_posMin;
+    slider.style.setProperty('--fill-pct','0%');
     updateValveAngle(0);
     updateActivePresets(null);
   }
@@ -392,11 +439,49 @@ function applyPreset(i){
   if(!pr)return;
   _currentPos=pr.value;
   var pct=normalizePct(pr.value);
+  var slider=document.getElementById('pos-slider');
+  slider.value=pr.value;
+  slider.style.setProperty('--fill-pct',pct.toFixed(1)+'%');
   document.getElementById('pos-value').textContent=pr.value.toFixed(_posDigits)+_posSuffix;
-  document.getElementById('pos-bar').style.width=pct.toFixed(1)+'%';
   updateValveAngle(pct);
   updateActivePresets(pr.value);
   if(typeof requestAction!=='undefined') requestAction('SetPosition', pr.value);
+}
+
+function onSliderInput(val){
+  var raw=parseFloat(val);
+  _currentPos=raw;
+  var pct=normalizePct(raw);
+  document.getElementById('pos-value').textContent=raw.toFixed(_posDigits)+_posSuffix;
+  document.getElementById('pos-slider').style.setProperty('--fill-pct',pct.toFixed(1)+'%');
+  updateValveAngle(pct);
+  updateActivePresets(raw);
+}
+
+function onSliderChange(val){
+  var raw=parseFloat(val);
+  _currentPos=raw;
+  var pct=normalizePct(raw);
+  document.getElementById('pos-value').textContent=raw.toFixed(_posDigits)+_posSuffix;
+  document.getElementById('pos-slider').style.setProperty('--fill-pct',pct.toFixed(1)+'%');
+  updateValveAngle(pct);
+  updateActivePresets(raw);
+  if(typeof requestAction!=='undefined') requestAction('SetPosition', raw);
+}
+
+function stepPos(dir){
+  if(!_posEditable||_currentPos===null)return;
+  var next=Math.round((_currentPos+dir*_posStep)*10000)/10000;
+  next=Math.max(_posMin,Math.min(_posMax,next));
+  _currentPos=next;
+  var pct=normalizePct(next);
+  var slider=document.getElementById('pos-slider');
+  slider.value=next;
+  slider.style.setProperty('--fill-pct',pct.toFixed(1)+'%');
+  document.getElementById('pos-value').textContent=next.toFixed(_posDigits)+_posSuffix;
+  updateValveAngle(pct);
+  updateActivePresets(next);
+  if(typeof requestAction!=='undefined') requestAction('SetPosition', next);
 }
 
 function toggleStatus(){
@@ -414,7 +499,7 @@ if(typeof requestAction==='undefined'){
     name:'Warmwasser-Ventil',
     temperature:42.3, tempSuffix:'°C',
     position:50, positionEditable:true,
-    positionMin:0, positionMax:100, positionSuffix:' %', positionDigits:0,
+    positionMin:0, positionMax:100, positionStep:1, positionSuffix:' %', positionDigits:0,
     status:true, statusEditable:true,
     useSymconColors:true,
     colors:{accent:2201331},
