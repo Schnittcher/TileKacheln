@@ -177,9 +177,19 @@
             ]
         },
         {
+            "name": "UseSymconColors",
+            "type": "CheckBox",
+            "caption": "Symcon-Designfarben verwenden (empfohlen)",
+            "value": true
+        },
+        {
+            "type": "Label",
+            "caption": "Wenn aktiv: Akzentfarbe und Textfarbe aus dem Symcon-Design (--accent-color, --content-color)."
+        },
+        {
             "type": "Label",
             "bold": true,
-            "caption": "Akzentfarbe"
+            "caption": "Benutzerdefinierte Farben (nur wenn Symcon-Design deaktiviert)"
         },
         {
             "type": "RowLayout",

@@ -14,7 +14,8 @@ class WhirlpoolKachel extends IPSModule
         $this->RegisterPropertyInteger('HeatingID', 0);
         $this->RegisterPropertyInteger('PowerID', 0);
         $this->RegisterPropertyInteger('EnergyID', 0);
-$this->RegisterPropertyInteger('ColorAccent',     46296);
+        $this->RegisterPropertyBoolean('UseSymconColors', true);
+        $this->RegisterPropertyInteger('ColorAccent',     46296);
         $this->RegisterPropertyInteger('ColorBubbles',    46296);
         $this->RegisterPropertyInteger('ColorPump',       2201331);
         $this->RegisterPropertyInteger('ColorHeating',    16739072);
@@ -159,6 +160,7 @@ $this->RegisterPropertyInteger('ColorAccent',     46296);
             'energy'       => null,
             'energyPrefix' => '',
             'energyUnit'   => '',
+            'useSymconColors' => $this->ReadPropertyBoolean('UseSymconColors'),
             'colors'      => [
                 'accent'  => $this->ReadPropertyInteger('ColorAccent'),
                 'bubbles' => $this->ReadPropertyInteger('ColorBubbles'),

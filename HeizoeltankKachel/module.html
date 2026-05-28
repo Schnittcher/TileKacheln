@@ -79,7 +79,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
       <!-- Öl-Füllung (von unten, geclippt) -->
       <rect id="tank-fill" x="8" y="60" width="84" height="0"
             clip-path="url(#tank-clip)"
-            fill="rgba(180,105,5,0.82)"/>
+            fill="var(--accent)" opacity="0.7"/>
 
       <!-- Akzentlinie an der Füllgrenze (Oberfläche) -->
       <rect id="tank-fill-top" x="8" y="60" width="84" height="0"
@@ -154,14 +154,18 @@ function intToHex(n){
 function handleMessage(jsonStr){
   var d=JSON.parse(jsonStr);
   var colors=d.colors||{};
-  var accentInt=colors.accent||14710784;
-  var r=(accentInt>>16)&0xff;
-  var g=(accentInt>>8)&0xff;
-  var b= accentInt    &0xff;
-
   var tile=document.getElementById('tile');
-  tile.style.setProperty('--accent',   intToHex(accentInt));
-  tile.style.setProperty('--accent-bg','rgba('+r+','+g+','+b+',.18)');
+  if(d.useSymconColors!==false){
+    tile.style.setProperty('--accent',    'var(--accent-color,#E07800)');
+    tile.style.setProperty('--accent-bg', 'color-mix(in srgb,var(--accent-color,#E07800) 18%,transparent)');
+  } else {
+    var accentInt=colors.accent||14710784;
+    var r=(accentInt>>16)&0xff;
+    var g=(accentInt>>8)&0xff;
+    var b= accentInt    &0xff;
+    tile.style.setProperty('--accent',    intToHex(accentInt));
+    tile.style.setProperty('--accent-bg', 'rgba('+r+','+g+','+b+',.18)');
+  }
 
   document.getElementById('tile-name').textContent=d.name||'';
 
@@ -198,7 +202,7 @@ function setTankFill(pct){
 if(typeof requestAction==='undefined'){
   handleMessage(JSON.stringify({
     name:'Heizöltank', value:1850, suffix:'L', digits:0, pct:62,
-    colors:{accent:14710784}
+    useSymconColors:true, colors:{accent:14710784}
   }));
 }
 </script>

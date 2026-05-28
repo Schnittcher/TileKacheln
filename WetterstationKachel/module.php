@@ -14,6 +14,7 @@ class WetterstationKachel extends IPSModule
         $this->RegisterPropertyInteger('RainID',          0);
         $this->RegisterPropertyInteger('PressureID',      0);
         $this->RegisterPropertyInteger('UVIndexID',       0);
+        $this->RegisterPropertyBoolean('UseSymconColors', true);
         $this->RegisterPropertyInteger('ColorAccent',     2733814);
 
         $this->SetVisualizationType(1);
@@ -115,8 +116,9 @@ class WetterstationKachel extends IPSModule
             'rain'         => $this->getVarData($this->ReadPropertyInteger('RainID')),
             'pressure'     => $this->getVarData($this->ReadPropertyInteger('PressureID')),
             'uvIndex'      => $this->getVarData($this->ReadPropertyInteger('UVIndexID')),
-            'colors'       => [
-                'accent'  => $this->ReadPropertyInteger('ColorAccent'),
+            'useSymconColors' => $this->ReadPropertyBoolean('UseSymconColors'),
+            'colors'          => [
+                'accent' => $this->ReadPropertyInteger('ColorAccent'),
             ],
         ];
     }

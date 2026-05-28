@@ -68,9 +68,9 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
       <defs>
         <!-- Pellet-Textur: versetzte Reihen kleiner Zylinder (Aufsicht) -->
         <pattern id="pellet-pat" x="0" y="0" width="9" height="6.5" patternUnits="userSpaceOnUse">
-          <ellipse cx="4.5" cy="2"   rx="3.6" ry="1.5" fill="rgba(185,115,40,0.95)"/>
-          <ellipse cx="0"   cy="5"   rx="3.6" ry="1.5" fill="rgba(165,98,28,0.90)"/>
-          <ellipse cx="9"   cy="5"   rx="3.6" ry="1.5" fill="rgba(165,98,28,0.90)"/>
+          <ellipse cx="4.5" cy="2"   rx="3.6" ry="1.5" fill="var(--accent)" opacity="0.95"/>
+          <ellipse cx="0"   cy="5"   rx="3.6" ry="1.5" fill="var(--accent)" opacity="0.75"/>
+          <ellipse cx="9"   cy="5"   rx="3.6" ry="1.5" fill="var(--accent)" opacity="0.75"/>
         </pattern>
         <!-- Clip auf den Innenraum -->
         <clipPath id="room-clip">
@@ -154,14 +154,19 @@ function intToHex(n){
 function handleMessage(jsonStr){
   var d=JSON.parse(jsonStr);
   var colors=d.colors||{};
-  var accentInt=colors.accent||16739072;
-  var r=(accentInt>>16)&0xff;
-  var g=(accentInt>>8)&0xff;
-  var b= accentInt    &0xff;
-
   var tile=document.getElementById('tile');
-  tile.style.setProperty('--accent',   intToHex(accentInt));
-  tile.style.setProperty('--accent-bg','rgba('+r+','+g+','+b+',.18)');
+
+  if(d.useSymconColors!==false){
+    tile.style.setProperty('--accent',    'var(--accent-color,#FF6B00)');
+    tile.style.setProperty('--accent-bg', 'color-mix(in srgb,var(--accent-color,#FF6B00) 18%,transparent)');
+  } else {
+    var accentInt=colors.accent||16739072;
+    var r=(accentInt>>16)&0xff;
+    var g=(accentInt>>8)&0xff;
+    var b= accentInt    &0xff;
+    tile.style.setProperty('--accent',    intToHex(accentInt));
+    tile.style.setProperty('--accent-bg', 'rgba('+r+','+g+','+b+',.18)');
+  }
 
   document.getElementById('tile-name').textContent=d.name||'';
 
@@ -198,6 +203,7 @@ function setStorageFill(pct){
 if(typeof requestAction==='undefined'){
   handleMessage(JSON.stringify({
     name:'Pelletlager',value:2450,suffix:'kg',digits:0,pct:65,
+    useSymconColors:true,
     colors:{accent:16739072}
   }));
 }

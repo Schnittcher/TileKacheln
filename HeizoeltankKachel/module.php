@@ -8,6 +8,7 @@ class HeizoeltankKachel extends IPSModule
 
         $this->RegisterPropertyString('TileName', 'Heizöltank');
         $this->RegisterPropertyInteger('FillLevelID',       0);
+        $this->RegisterPropertyBoolean('UseSymconColors', true);
         $this->RegisterPropertyInteger('ColorAccent',     14710784);
 
         $this->SetVisualizationType(1);
@@ -64,7 +65,8 @@ class HeizoeltankKachel extends IPSModule
             'suffix' => '',
             'digits' => 0,
             'pct'    => null,
-            'colors' => [
+            'useSymconColors' => $this->ReadPropertyBoolean('UseSymconColors'),
+            'colors'          => [
                 'accent'  => $this->ReadPropertyInteger('ColorAccent'),
             ],
         ];

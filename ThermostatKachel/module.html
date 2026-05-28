@@ -212,15 +212,28 @@ function intToHex(n) {
   return '#' + ('000000' + n.toString(16)).slice(-6);
 }
 
-function applyAccent(colorInt) {
-  var r = (colorInt >> 16) & 0xff;
-  var g = (colorInt >>  8) & 0xff;
-  var b =  colorInt        & 0xff;
-  var hex = intToHex(colorInt);
+function applyAccent(colorInt, useSymcon, modeClass) {
   var tile = document.getElementById("tile");
-  tile.style.setProperty('--accent',    hex);
-  tile.style.setProperty('--accent-fg', hex);
-  tile.style.setProperty('--accent-bg', 'rgba(' + r + ',' + g + ',' + b + ',.15)');
+  if (useSymcon) {
+    var isActive = (modeClass !== 'state-off' && modeClass !== 'state-idle');
+    if (isActive) {
+      tile.style.setProperty('--accent',    'var(--accent-color,#FF6B00)');
+      tile.style.setProperty('--accent-fg', 'var(--accent-color,#FF6B00)');
+      tile.style.setProperty('--accent-bg', 'color-mix(in srgb,var(--accent-color,#FF6B00) 15%,transparent)');
+    } else {
+      tile.style.setProperty('--accent',    'color-mix(in srgb,var(--content-color,#fff) 35%,transparent)');
+      tile.style.setProperty('--accent-fg', 'color-mix(in srgb,var(--content-color,#fff) 35%,transparent)');
+      tile.style.setProperty('--accent-bg', 'color-mix(in srgb,var(--content-color,#fff)  8%,transparent)');
+    }
+  } else {
+    var r = (colorInt >> 16) & 0xff;
+    var g = (colorInt >>  8) & 0xff;
+    var b =  colorInt        & 0xff;
+    var hex = intToHex(colorInt);
+    tile.style.setProperty('--accent',    hex);
+    tile.style.setProperty('--accent-fg', hex);
+    tile.style.setProperty('--accent-bg', 'rgba(' + r + ',' + g + ',' + b + ',.15)');
+  }
 }
 
 function handleMessage(jsonStr) {
@@ -236,7 +249,8 @@ function handleMessage(jsonStr) {
     'state-off':  colors.off  || 10066329,
     'state-idle': 12303291
   };
-  applyAccent(colorMap[modeClass] || 12303291);
+  var useSymcon = d.useSymconColors !== false;
+  applyAccent(colorMap[modeClass] || 12303291, useSymcon, modeClass);
 
   var tile = document.getElementById("tile");
 
@@ -377,7 +391,7 @@ if (typeof requestAction === 'undefined') {
       {value: 'auto', label: 'Auto'},   {value: 'off',  label: 'Aus'}
     ],
     config: {min: 5, max: 30, step: 0.5},
-    colors: {heat: 16739072, cool: 2201331, auto: 5025616, off: 10066329}
+    useSymconColors: true, colors: {heat: 16739072, cool: 2201331, auto: 5025616, off: 10066329}
   }));
 }
 </script>

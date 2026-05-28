@@ -289,14 +289,18 @@ function degToCompass(deg){
 function handleMessage(jsonStr){
   var d=JSON.parse(jsonStr);
   var colors=d.colors||{};
-  var accentInt=colors.accent||2733814;
-  var r=(accentInt>>16)&0xff;
-  var g=(accentInt>>8)&0xff;
-  var b=accentInt&0xff;
-
   var tile=document.getElementById('tile');
-  tile.style.setProperty('--accent',   intToHex(accentInt));
-  tile.style.setProperty('--accent-bg','rgba('+r+','+g+','+b+',.15)');
+  if(d.useSymconColors!==false){
+    tile.style.setProperty('--accent',    'var(--accent-color,#29B6F6)');
+    tile.style.setProperty('--accent-bg', 'color-mix(in srgb,var(--accent-color,#29B6F6) 15%,transparent)');
+  } else {
+    var accentInt=colors.accent||2733814;
+    var r=(accentInt>>16)&0xff;
+    var g=(accentInt>>8)&0xff;
+    var b=accentInt&0xff;
+    tile.style.setProperty('--accent',    intToHex(accentInt));
+    tile.style.setProperty('--accent-bg', 'rgba('+r+','+g+','+b+',.15)');
+  }
 
   document.getElementById('tile-name').textContent=d.name||'';
 
@@ -308,7 +312,7 @@ function handleMessage(jsonStr){
       var deg=((parseFloat(d.windDir.value)%360)+360)%360;
       var compass=degToCompass(deg);
       document.getElementById('wind-dir-txt').textContent=compass+'  ('+Math.round(deg)+'°)';
-      updateCompass(deg,compass,intToHex(accentInt));
+      updateCompass(deg,compass,'var(--accent)');
     } else {
       document.getElementById('wind-dir-txt').textContent='';
     }
@@ -373,7 +377,7 @@ if(typeof requestAction==='undefined'){
     rain:       {value:0.2, suffix:'mm',  digits:1},
     pressure:   {value:1013,suffix:'hPa', digits:0},
     uvIndex:    {value:3,   suffix:'',    digits:0},
-    colors:{accent:2733814}
+    useSymconColors:true, colors:{accent:2733814}
   }));
 }
 </script>

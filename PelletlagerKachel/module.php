@@ -8,6 +8,7 @@ class PelletlagerKachel extends IPSModule
 
         $this->RegisterPropertyString('TileName', 'Pelletlager');
         $this->RegisterPropertyInteger('FillLevelID', 0);
+        $this->RegisterPropertyBoolean('UseSymconColors', true);
         $this->RegisterPropertyInteger('ColorAccent',     16739072);
 
         $this->SetVisualizationType(1);
@@ -64,6 +65,7 @@ class PelletlagerKachel extends IPSModule
             'suffix' => '',
             'digits' => 0,
             'pct'    => null,
+            'useSymconColors' => $this->ReadPropertyBoolean('UseSymconColors'),
             'colors' => [
                 'accent'  => $this->ReadPropertyInteger('ColorAccent'),
             ],

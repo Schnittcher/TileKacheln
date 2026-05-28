@@ -1,0 +1,527 @@
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
+:root{
+  --text:         var(--content-color,#fff);
+  --text-sub:     color-mix(in srgb,var(--content-color,#fff) 55%,transparent);
+  --c-ui-bg:      color-mix(in srgb,var(--content-color,#fff)  5%,transparent);
+  --c-ui-border:  color-mix(in srgb,var(--content-color,#fff)  8%,transparent);
+  --c-btn-bg:     color-mix(in srgb,var(--content-color,#fff)  6%,transparent);
+  --c-btn-border: color-mix(in srgb,var(--content-color,#fff) 13%,transparent);
+  --c-hover:      color-mix(in srgb,var(--content-color,#fff) 14%,transparent);
+}
+
+.tile{
+  font-size:12px;width:100%;height:100%;position:relative;overflow:hidden;
+  background:transparent;color:var(--text,#fff);
+  padding:1em 1em 0.75em;
+  box-shadow:0 4px 20px rgba(0,0,0,.45);
+  display:flex;flex-direction:column;
+}
+.tile::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--accent,#2196F3);transition:background .3s;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+.header{display:flex;align-items:center;margin-bottom:0.5em}
+.tile-name{
+  font-size:1.08em;font-weight:500;color:var(--text-sub);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;
+}
+
+/* ── Steuer-Zeile (Power + Settings) ────────────────── */
+.ctrl-row{
+  display:flex;align-items:center;justify-content:center;
+  gap:0.5em;margin-bottom:0.5em;
+}
+.ctrl-btn{
+  width:2.6em;height:2.6em;border-radius:50%;
+  border:1px solid var(--c-btn-border);background:var(--c-btn-bg);
+  color:var(--text-sub);cursor:pointer;outline:none;
+  display:none;align-items:center;justify-content:center;
+  transition:background .15s,color .15s,border-color .15s;
+}
+.ctrl-btn:hover{background:var(--c-hover);color:var(--text)}
+.ctrl-btn:active{transform:scale(.88)}
+#power-btn.visible{display:flex}
+#power-btn.on{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+#silent-btn.visible{display:flex}
+#silent-btn.on{border-color:var(--accent-sel);color:var(--accent-sel);background:var(--accent-sel-bg)}
+#settings-btn.visible{display:flex}
+
+/* ── Ist-Temperatur (groß) ───────────────────────────── */
+.current-temp-area{
+  text-align:center;flex:1;min-height:0;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  margin:0.25em 0 0.5em;
+}
+.current-temp-val{
+  font-size:var(--temp-size,4em);font-weight:200;
+  line-height:1.1;letter-spacing:-0.05em;white-space:nowrap;
+}
+
+/* ── Soll-Temperatur-Steuerung ──────────────────────── */
+.sp-label{
+  font-size:0.92em;color:var(--text-sub);text-align:center;
+  margin-bottom:0.33em;text-transform:uppercase;letter-spacing:.5px;
+}
+.setpoint-control{
+  display:flex;align-items:center;justify-content:center;gap:0.75em;
+  padding:0.42em 0.67em;background:var(--c-ui-bg);
+  border-radius:0.67em;border:1px solid var(--c-ui-border);
+}
+.sp-btn{
+  width:2em;aspect-ratio:1;border-radius:50%;
+  border:1px solid var(--c-btn-border);background:var(--c-btn-bg);
+  color:var(--text);font-size:1.33em;line-height:1;cursor:pointer;
+  transition:background .15s,transform .1s;outline:none;
+  display:flex;align-items:center;justify-content:center;
+}
+.sp-btn:hover{background:var(--c-hover)}
+.sp-btn:active{transform:scale(.88)}
+.sp-btn.hidden{visibility:hidden;pointer-events:none}
+.setpoint-control.readonly .sp-btn{display:none}
+.setpoint-control.readonly{justify-content:center}
+.sp-val{font-size:1.67em;font-weight:300;min-width:3em;text-align:center;white-space:nowrap;}
+
+/* ── Sektion-Label ───────────────────────────────────── */
+.section-label{
+  font-size:0.85em;color:var(--text-sub);text-transform:uppercase;
+  letter-spacing:.5px;margin-top:0.5em;margin-bottom:0.25em;
+}
+
+/* ── Option-Buttons (Modus & Lüfter) ────────────────── */
+.opt-btn{
+  flex:1 1 auto;padding:0.42em 0.75em;border-radius:0.5em;
+  border:1px solid var(--c-ui-border);background:var(--c-ui-bg);
+  color:var(--text-sub);font-size:1em;cursor:pointer;outline:none;
+  transition:all .15s;white-space:nowrap;
+}
+.opt-btn:hover{background:var(--c-hover);color:var(--text)}
+.opt-btn.active{
+  border-color:var(--accent-sel);color:var(--accent-sel);background:var(--accent-sel-bg);
+}
+.opt-row{display:flex;gap:0.33em;flex-wrap:wrap;justify-content:center;margin-top:0.5em}
+
+/* ── Popup-Overlay ───────────────────────────────────── */
+.popup{
+  position:absolute;inset:0;z-index:20;
+  background:rgba(0,0,0,.85);
+  display:flex;flex-direction:column;
+  padding:0.85em 1em 0.9em;
+  visibility:hidden;opacity:0;
+  transition:opacity .18s,visibility .18s;
+}
+.popup.open{visibility:visible;opacity:1}
+.popup-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:0.75em;
+}
+.popup-title{
+  font-size:0.9em;font-weight:500;color:var(--text-sub);
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.popup-close{
+  width:1.7em;height:1.7em;border-radius:50%;
+  border:1px solid var(--c-btn-border);background:var(--c-btn-bg);
+  color:var(--text);cursor:pointer;outline:none;font-size:1em;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s;
+}
+.popup-close:hover{background:var(--c-hover)}
+.popup-close:active{transform:scale(.88)}
+.popup-body{
+  display:flex;flex-direction:column;gap:0.75em;
+  overflow-y:auto;flex:1;min-height:0;
+}
+</style>
+
+<div id="tile" class="tile">
+
+  <!-- Header -->
+  <div class="header">
+    <span class="tile-name" id="tile-name">Klimaanlage</span>
+  </div>
+
+  <!-- Ist-Temperatur (groß) -->
+  <div id="current-temp-area" class="current-temp-area">
+    <div class="current-temp-val" id="current-temp-val" style="visibility:hidden">--&deg;</div>
+  </div>
+
+  <!-- Steuer-Zeile: Power (immer) + Settings (nur Compact-Modus) -->
+  <div class="ctrl-row">
+    <button id="power-btn" class="ctrl-btn" onclick="togglePower()">
+      <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.2" stroke-linecap="round" style="pointer-events:none">
+        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+        <line x1="12" y1="2" x2="12" y2="12"/>
+      </svg>
+    </button>
+    <button id="silent-btn" class="ctrl-btn" onclick="toggleSilent()" title="Silent Mode">
+      <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+    <button id="settings-btn" class="ctrl-btn" onclick="openPopup()">
+      <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33
+                 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33
+                 l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0
+                 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06
+                 A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51
+                 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9
+                 a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Soll-Temperatur -->
+  <div id="temp-area" style="display:none">
+    <div class="sp-label">Soll-Temperatur</div>
+    <div class="setpoint-control">
+      <button class="sp-btn" id="temp-minus" onclick="adjustTemp(-1)">&#8722;</button>
+      <div class="sp-val" id="temp-val">--&deg;</div>
+      <button class="sp-btn" id="temp-plus" onclick="adjustTemp(1)">&#43;</button>
+    </div>
+  </div>
+
+  <!-- Modus (inline) -->
+  <div id="modus-section" style="display:none">
+    <div class="section-label">Modus</div>
+    <div class="opt-row" id="modus-btns"></div>
+  </div>
+
+  <!-- Lüfterstufe (inline) -->
+  <div id="fan-section" style="display:none">
+    <div class="section-label">Lüfter</div>
+    <div class="opt-row" id="fan-btns"></div>
+  </div>
+
+  <!-- Popup (sichtbar wenn Kachel zu klein für inline-Buttons) -->
+  <div id="popup" class="popup" onclick="if(!event.target.closest('button'))closePopup()">
+    <div class="popup-header">
+      <span class="popup-title">Einstellungen</span>
+      <button class="popup-close" onclick="closePopup()">&#x2715;</button>
+    </div>
+    <div class="popup-body">
+      <div id="popup-modus-section" style="display:none">
+        <div class="section-label">Modus</div>
+        <div class="opt-row" id="popup-modus-btns"></div>
+      </div>
+      <div id="popup-fan-section" style="display:none">
+        <div class="section-label">Lüfter</div>
+        <div class="opt-row" id="popup-fan-btns"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+var _currentTarget = null;
+var _currentStatus = null;
+var _currentSilent = null;
+var _compactMode   = false;
+var _lastData      = null;
+
+// ── Responsive Skalierung ───────────────────────────────
+var _base = 12;
+(function(){
+  if(typeof ResizeObserver === 'undefined') return;
+  var t    = document.getElementById('tile');
+  var area = document.getElementById('current-temp-area');
+
+  // Tile-Observer: Basis-Schriftgröße + Compact-Check
+  new ResizeObserver(function(e){
+    var bs = e[0].borderBoxSize && e[0].borderBoxSize[0];
+    var w  = bs ? bs.inlineSize : t.offsetWidth;
+    var h  = bs ? bs.blockSize  : t.offsetHeight;
+    _base  = Math.max(10, Math.min(20, Math.min(w,h) / 17.5));
+    t.style.fontSize = _base.toFixed(2) + 'px';
+    if(_lastData) checkCompact(false);
+    updateTempSize();
+  }).observe(t);
+
+  // Bereichs-Observer: Temperatur-Schriftgröße wenn Höhe sich ändert
+  new ResizeObserver(function(){
+    updateTempSize();
+  }).observe(area);
+})();
+
+function updateTempSize(){
+  var area = document.getElementById('current-temp-area');
+  if(!area) return;
+  var dh = area.offsetHeight;
+  var px = dh > 0 ? Math.max(_base*2, Math.min(_base*3.5, dh*0.55)) : _base*2;
+  document.getElementById('tile').style.setProperty('--temp-size', (px/_base).toFixed(3) + 'em');
+}
+
+// ── Compact-Mode-Erkennung ──────────────────────────────
+// Schwelle: Buttons nehmen > 48 % der Kachelhöhe ein → Popup.
+// Breiter ziehen reduziert Umbrüche → kleineres Verhältnis → Buttons erscheinen wieder.
+// Hysterese: Einstieg > 48 %, Ausstieg < 38 % (kein Flackern an der Grenze).
+var COMPACT_ENTER = 0.48;
+var COMPACT_EXIT  = 0.38;
+
+function checkCompact(forceEnterThreshold){
+  if(!_lastData) return;
+  var hasModus = _lastData.modusOptions && _lastData.modusOptions.length > 0;
+  var hasFan   = _lastData.fanSpeedOptions && _lastData.fanSpeedOptions.length > 0;
+  if(!hasModus && !hasFan){ applyCompact(false); return; }
+
+  var m = document.getElementById('modus-section');
+  var f = document.getElementById('fan-section');
+  var t = document.getElementById('tile');
+
+  // Temporär einblenden um die echte Höhe zu messen (kein visueller Flash –
+  // Browser malt erst am Ende des JS-Tasks)
+  if(hasModus) m.style.removeProperty('display');
+  if(hasFan)   f.style.removeProperty('display');
+
+  var tileH    = t.offsetHeight;                   // erzwingt Reflow
+  var sectionH = (hasModus ? m.offsetHeight : 0) + (hasFan ? f.offsetHeight : 0);
+  var areaH    = document.getElementById('current-temp-area').offsetHeight;
+
+  // Wieder ausblenden wenn wir gerade im Compact-Modus waren
+  if(_compactMode){
+    if(hasModus) m.style.display = 'none';
+    if(hasFan)   f.style.display = 'none';
+  }
+
+  var ratio     = tileH > 0 ? sectionH / tileH : 1;
+  var threshold = (forceEnterThreshold || !_compactMode) ? COMPACT_ENTER : COMPACT_EXIT;
+  applyCompact(ratio > threshold || areaH < _base * 2.5);
+}
+
+function applyCompact(compact){
+  if(_compactMode === compact) return;
+  _compactMode = compact;
+  var d        = _lastData || {};
+  var hasModus = d.modusOptions && d.modusOptions.length > 0;
+  var hasFan   = d.fanSpeedOptions && d.fanSpeedOptions.length > 0;
+  var m        = document.getElementById('modus-section');
+  var f        = document.getElementById('fan-section');
+  var btn      = document.getElementById('settings-btn');
+
+  if(compact){
+    if(hasModus) m.style.display = 'none';
+    if(hasFan)   f.style.display = 'none';
+    btn.classList.add('visible');
+  } else {
+    if(hasModus) m.style.removeProperty('display');
+    if(hasFan)   f.style.removeProperty('display');
+    btn.classList.remove('visible');
+    closePopup();
+  }
+  updateTempSize();
+}
+
+// ── Popup ───────────────────────────────────────────────
+function openPopup(){
+  if(!_lastData) return;
+  renderOptions('popup-modus-section','popup-modus-btns',
+                _lastData.modusOptions, _lastData.modus, 'SetModus');
+  renderOptions('popup-fan-section','popup-fan-btns',
+                _lastData.fanSpeedOptions, _lastData.fanSpeed, 'SetFanSpeed');
+  document.getElementById('popup').classList.add('open');
+}
+
+function closePopup(){
+  document.getElementById('popup').classList.remove('open');
+}
+
+// ── Farbe ───────────────────────────────────────────────
+function intToHex(n){ return '#' + ('000000' + n.toString(16)).slice(-6) }
+
+function togglePower(){
+  if(_currentStatus === null) return;
+  _currentStatus = !_currentStatus;
+  document.getElementById('power-btn').classList.toggle('on', _currentStatus);
+  if(typeof requestAction !== 'undefined') requestAction('SetStatus', _currentStatus);
+}
+
+function toggleSilent(){
+  if(_currentSilent === null) return;
+  _currentSilent = !_currentSilent;
+  document.getElementById('silent-btn').classList.toggle('on', _currentSilent);
+  if(typeof requestAction !== 'undefined') requestAction('SetSilentMode', _currentSilent);
+}
+
+function applyAccent(colorInt, useSymcon, isOn, colorOnInt){
+  var t = document.getElementById('tile');
+  if(useSymcon){
+    // Aktive Buttons immer in voller Akzentfarbe (unabhängig von AN/AUS)
+    t.style.setProperty('--accent-sel',    'var(--accent-color,#2196F3)');
+    t.style.setProperty('--accent-sel-bg', 'color-mix(in srgb,var(--accent-color,#2196F3) 15%,transparent)');
+    if(isOn === false){
+      // Power-Button & Tile-Akzent gedimmt wenn AUS
+      t.style.setProperty('--accent',    'color-mix(in srgb,var(--content-color,#fff) 35%,transparent)');
+      t.style.setProperty('--accent-fg', 'color-mix(in srgb,var(--content-color,#fff) 35%,transparent)');
+      t.style.setProperty('--accent-bg', 'color-mix(in srgb,var(--content-color,#fff)  8%,transparent)');
+    } else {
+      t.style.setProperty('--accent',    'var(--accent-color,#2196F3)');
+      t.style.setProperty('--accent-fg', 'var(--accent-color,#2196F3)');
+      t.style.setProperty('--accent-bg', 'color-mix(in srgb,var(--accent-color,#2196F3) 15%,transparent)');
+    }
+  } else {
+    var r = (colorInt >> 16) & 0xff;
+    var g = (colorInt >>  8) & 0xff;
+    var b =  colorInt        & 0xff;
+    t.style.setProperty('--accent',    intToHex(colorInt));
+    t.style.setProperty('--accent-fg', intToHex(colorInt));
+    t.style.setProperty('--accent-bg', 'rgba('+r+','+g+','+b+',.15)');
+    // Aktive Buttons immer in der "AN"-Farbe
+    var on = colorOnInt || colorInt;
+    var ro = (on >> 16) & 0xff, go = (on >> 8) & 0xff, bo = on & 0xff;
+    t.style.setProperty('--accent-sel',    intToHex(on));
+    t.style.setProperty('--accent-sel-bg', 'rgba('+ro+','+go+','+bo+',.15)');
+  }
+}
+
+// ── Daten empfangen ─────────────────────────────────────
+function handleMessage(jsonStr){
+  var d = JSON.parse(jsonStr);
+  _lastData = d;
+  var colors   = d.colors || {};
+  var colorOn  = colors.on  || 2201331;
+  var colorOff = colors.off || 10066329;
+
+  var useSymcon = d.useSymconColors !== false;
+  var statusKnown = d.status !== null && d.status !== undefined;
+  applyAccent(statusKnown ? (d.status ? colorOn : colorOff) : colorOn,
+              useSymcon,
+              statusKnown ? d.status : null,
+              colorOn);
+
+  // Power-Button
+  var pb = document.getElementById('power-btn');
+  if(d.status !== null && d.status !== undefined){
+    _currentStatus = d.status;
+    pb.classList.add('visible');
+    pb.classList.toggle('on', d.status);
+  } else {
+    _currentStatus = null;
+    pb.classList.remove('visible');
+  }
+
+  // Silent-Button
+  var sb = document.getElementById('silent-btn');
+  if(d.silentMode !== null && d.silentMode !== undefined){
+    _currentSilent = d.silentMode;
+    sb.classList.add('visible');
+    sb.classList.toggle('on', d.silentMode);
+    sb.disabled = (d.silentModeEditable === false);
+  } else {
+    _currentSilent = null;
+    sb.classList.remove('visible');
+  }
+
+  document.getElementById('tile-name').textContent = d.name || '';
+
+  // Ist-Temperatur
+  var ctv = document.getElementById('current-temp-val');
+  if(d.currentTemp !== null && d.currentTemp !== undefined){
+    ctv.textContent    = parseFloat(d.currentTemp).toFixed(1) + '°';
+    ctv.style.visibility = 'visible';
+  } else {
+    ctv.style.visibility = 'hidden';
+  }
+
+  // Soll-Temperatur
+  var ta = document.getElementById('temp-area');
+  if(d.targetTemp !== null && d.targetTemp !== undefined){
+    _currentTarget = parseFloat(d.targetTemp);
+    document.getElementById('temp-val').textContent = _currentTarget.toFixed(1) + '°';
+    ta.style.removeProperty('display');
+    var editable = d.targetTempEditable !== false;
+    var spCtrl   = document.querySelector('#temp-area .setpoint-control');
+    if(spCtrl) spCtrl.classList.toggle('readonly', !editable);
+    document.getElementById('temp-minus').classList.toggle('hidden', !editable);
+    document.getElementById('temp-plus').classList.toggle('hidden', !editable);
+  } else {
+    ta.style.display = 'none';
+  }
+
+  // Modus & Lüfter (inline) – erst alles zeigen, dann Compact-Check
+  renderOptions('modus-section', 'modus-btns', d.modusOptions, d.modus, 'SetModus');
+  renderOptions('fan-section',   'fan-btns',   d.fanSpeedOptions, d.fanSpeed, 'SetFanSpeed');
+
+  // Popup aktualisieren falls gerade offen
+  if(document.getElementById('popup').classList.contains('open')){
+    renderOptions('popup-modus-section','popup-modus-btns',
+                  d.modusOptions, d.modus, 'SetModus');
+    renderOptions('popup-fan-section','popup-fan-btns',
+                  d.fanSpeedOptions, d.fanSpeed, 'SetFanSpeed');
+  }
+
+  // Compact-Status neu bestimmen (forceEnterThreshold=true für saubere Neubewertung)
+  _compactMode = false;
+  document.getElementById('settings-btn').classList.remove('visible');
+  checkCompact(true);
+
+  updateTempSize();
+}
+
+function renderOptions(sectionId, rowId, options, current, action){
+  var section = document.getElementById(sectionId);
+  var row     = document.getElementById(rowId);
+  if(!options || options.length === 0){ section.style.display = 'none'; return; }
+  section.style.removeProperty('display');
+  row.innerHTML = '';
+  options.forEach(function(opt){
+    var btn = document.createElement('button');
+    btn.className = 'opt-btn' + (opt.value === current ? ' active' : '');
+    btn.textContent = opt.label;
+    btn.onclick = (function(v, a, r){
+      return function(){
+        r.querySelectorAll('.opt-btn').forEach(function(b){ b.classList.remove('active') });
+        btn.classList.add('active');
+        if(typeof requestAction !== 'undefined') requestAction(a, v);
+      };
+    })(opt.value, action, row);
+    row.appendChild(btn);
+  });
+}
+
+function adjustTemp(dir){
+  if(_currentTarget === null) return;
+  var cfg  = typeof _config !== 'undefined' ? _config : {min:16, max:30, step:0.5};
+  var next = Math.round((_currentTarget + dir * cfg.step) * 10) / 10;
+  if(next < cfg.min || next > cfg.max) return;
+  _currentTarget = next;
+  document.getElementById('temp-val').textContent = next.toFixed(1) + '°';
+  if(typeof requestAction !== 'undefined') requestAction('SetTargetTemp', next);
+}
+
+// ── Vorschau (kein IPS-Kontext) ─────────────────────────
+if(typeof requestAction === 'undefined'){
+  _config = {min:16, max:30, step:0.5};
+  handleMessage(JSON.stringify({
+    name:'Wohnzimmer Klima',
+    status:true, silentMode:false, silentModeEditable:true,
+    useSymconColors:true,
+    currentTemp:24.2,
+    targetTemp:22.5, targetTempEditable:true,
+    modus:'2',
+    modusOptions:[
+      {value:'1',label:'Kühlen'},
+      {value:'2',label:'Heizen'},
+      {value:'3',label:'Auto'},
+      {value:'4',label:'Trocken'},
+      {value:'5',label:'Lüften'}
+    ],
+    fanSpeed:'2',
+    fanSpeedOptions:[
+      {value:'1',label:'Auto'},
+      {value:'2',label:'Leise'},
+      {value:'3',label:'Mittel'},
+      {value:'4',label:'Stark'}
+    ],
+    colors:{on:2201331,off:10066329}
+  }));
+}
+</script>

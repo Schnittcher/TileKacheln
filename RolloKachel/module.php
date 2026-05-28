@@ -18,6 +18,7 @@ class RolloKachel extends IPSModule
         $this->RegisterPropertyInteger('StopID', 0);
         $this->RegisterPropertyInteger('StopValue', 1);
         $this->RegisterAttributeInteger('StopVariableType', VARIABLETYPE_BOOLEAN);
+        $this->RegisterPropertyBoolean('UseSymconColors', true);
         $this->RegisterPropertyInteger('ColorAccent', 2201331);
 
         $this->RegisterPropertyString('Preset1Label', '');
@@ -264,7 +265,8 @@ class RolloKachel extends IPSModule
             'automatik'     => $automatik,
             'stopAvailable' => $stopAvailable,
             'stopValue'     => (bool) $this->ReadPropertyInteger('StopValue'),
-            'colors'        => [
+            'useSymconColors' => $this->ReadPropertyBoolean('UseSymconColors'),
+            'colors'          => [
                 'accent' => $this->ReadPropertyInteger('ColorAccent'),
             ],
         ];

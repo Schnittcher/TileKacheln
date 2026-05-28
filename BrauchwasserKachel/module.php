@@ -11,6 +11,7 @@ class BrauchwasserKachel extends IPSModule
         $this->RegisterPropertyInteger('PumpID',     0);
         $this->RegisterPropertyInteger('TempOnID',   0);
         $this->RegisterPropertyInteger('TempOffID',  0);
+        $this->RegisterPropertyBoolean('UseSymconColors', true);
         $this->RegisterPropertyInteger('ColorAccent',     16724736);
         $this->RegisterPropertyInteger('ColorPumpOn',     2201331);
 
@@ -76,7 +77,8 @@ class BrauchwasserKachel extends IPSModule
             'pumpOn'  => null,
             'tempOn'  => null,
             'tempOff' => null,
-            'colors'  => [
+            'useSymconColors' => $this->ReadPropertyBoolean('UseSymconColors'),
+            'colors'          => [
                 'accent'  => $this->ReadPropertyInteger('ColorAccent'),
                 'pumpOn'  => $this->ReadPropertyInteger('ColorPumpOn'),
             ],

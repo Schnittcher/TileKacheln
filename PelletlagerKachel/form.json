@@ -24,7 +24,22 @@
         {
             "type": "Label",
             "bold": true,
-            "caption": "Akzentfarbe"
+            "caption": "Design"
+        },
+        {
+            "name": "UseSymconColors",
+            "type": "CheckBox",
+            "caption": "Symcon-Designfarben verwenden (empfohlen)",
+            "value": true
+        },
+        {
+            "type": "Label",
+            "caption": "Wenn aktiv: Akzentfarbe aus dem Symcon-Design (--accent-color)."
+        },
+        {
+            "type": "Label",
+            "bold": true,
+            "caption": "Benutzerdefinierte Farbe (nur wenn Symcon-Design deaktiviert)"
         },
         {
             "type": "RowLayout",

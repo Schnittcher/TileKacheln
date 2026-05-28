@@ -1,0 +1,189 @@
+{
+    "elements": [
+        {
+            "name": "TileName",
+            "type": "ValidationTextBox",
+            "caption": "Name der Kachel",
+            "value": "Ventil"
+        },
+        {
+            "type": "Label",
+            "bold": true,
+            "caption": "Variablen Verknüpfungen"
+        },
+        {
+            "type": "Label",
+            "caption": "Nicht benötigte Felder einfach leer lassen."
+        },
+        {
+            "name": "TemperatureID",
+            "type": "SelectVariable",
+            "caption": "Wassertemperatur (optional)",
+            "validVariableTypes": [2],
+            "value": 0
+        },
+        {
+            "name": "PositionID",
+            "type": "SelectVariable",
+            "caption": "Ventilstellung (z.B. 0–100 %)",
+            "validVariableTypes": [1, 2],
+            "value": 0
+        },
+        {
+            "name": "StatusID",
+            "type": "SelectVariable",
+            "caption": "Status Auf / Zu (optional, Boolean)",
+            "validVariableTypes": [0],
+            "value": 0
+        },
+        {
+            "type": "Label",
+            "bold": true,
+            "caption": "Schnellauswahl (Presets)"
+        },
+        {
+            "type": "Label",
+            "caption": "Namen und Sollwerte für die vier Preset-Schaltflächen."
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "name": "Preset1Name",
+                    "type": "ValidationTextBox",
+                    "caption": "Preset 1 Name",
+                    "value": "Zu"
+                },
+                {
+                    "name": "Preset1Value",
+                    "type": "NumberSpinner",
+                    "caption": "Wert",
+                    "value": 0,
+                    "digits": 1,
+                    "minimum": -9999,
+                    "maximum": 9999
+                }
+            ]
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "name": "Preset2Name",
+                    "type": "ValidationTextBox",
+                    "caption": "Preset 2 Name",
+                    "value": "25 %"
+                },
+                {
+                    "name": "Preset2Value",
+                    "type": "NumberSpinner",
+                    "caption": "Wert",
+                    "value": 25,
+                    "digits": 1,
+                    "minimum": -9999,
+                    "maximum": 9999
+                }
+            ]
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "name": "Preset3Name",
+                    "type": "ValidationTextBox",
+                    "caption": "Preset 3 Name",
+                    "value": "50 %"
+                },
+                {
+                    "name": "Preset3Value",
+                    "type": "NumberSpinner",
+                    "caption": "Wert",
+                    "value": 50,
+                    "digits": 1,
+                    "minimum": -9999,
+                    "maximum": 9999
+                }
+            ]
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "name": "Preset4Name",
+                    "type": "ValidationTextBox",
+                    "caption": "Preset 4 Name",
+                    "value": "Auf"
+                },
+                {
+                    "name": "Preset4Value",
+                    "type": "NumberSpinner",
+                    "caption": "Wert",
+                    "value": 100,
+                    "digits": 1,
+                    "minimum": -9999,
+                    "maximum": 9999
+                }
+            ]
+        },
+        {
+            "type": "Label",
+            "bold": true,
+            "caption": "Darstellung"
+        },
+        {
+            "name": "UseSymconColors",
+            "type": "CheckBox",
+            "caption": "Symcon-Akzentfarbe verwenden (empfohlen)",
+            "value": true
+        },
+        {
+            "type": "Label",
+            "caption": "Eigene Farbe (nur wenn Symcon-Akzentfarbe deaktiviert):"
+        },
+        {
+            "type": "Label",
+            "bold": true,
+            "caption": "Akzentfarbe"
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "name": "ColorAccent",
+                    "type": "SelectColor",
+                    "caption": "Akzent",
+                    "value": 2201331
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "type": "Label",
+            "caption": "Spenden / Schenkung"
+        },
+        {
+            "type": "Label",
+            "caption": "Dieses Modul ist für die nicht kommerzielle Nutzung kostenlos, Schenkungen als Unterstützung für den Autor werden hier akzeptiert:    "
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "type": "Image",
+                    "onClick": "echo 'https://www.paypal.com/donate?hosted_button_id=EK4JRP87XLSHW';",
+                    "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALiQAAC4kBN8nLrQAADDpJREFUeNrtmnmMXXUVxz/n994sXaalrdCq2CIw1A2mLmhcwlbcorYVxKgxxC3uG0btYKKJGOkgLsEF1ESjJIq7HcQaUSKoCAW0fYVq6bQVSm1tS5l2pp03b957v+Mf577Offe994UrICJpuCdJ/7vvvuu+c3/nnnN+56QQCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCI6PsNUNCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCI6PsNUNCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCI6PsNUNCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCI6PsNUNCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCI6PsNUNCIIgCIIgCA=="
+                },
+                {
+                    "type": "Label",
+                    "caption": ""
+                },
+                {
+                    "type": "Image",
+                    "onClick": "echo 'https://www.amazon.de/hz/wishlist/ls/3JVWED9SZMDPK?ref_=wl_share';",
+                    "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALiQAAC4kBN8nLrQAADlZJREFUeNrtnXtwXFd9xz/n7kqWbTnWyjZK7EjVynFCiXk4tA2lTUlKCpQQCBT64pGGPphpaad0hpamTR+UYUrDTGlheM1Q2oGhKQOksRyHpglQ2kISpmRKHi0YZ22nMY78kmRLlry6++sf30saNdKq2CKw1A0mLmhcwlbcorYVxKgxxC3uG0btYKKJGOkgLsEF1ESjJIq7HcQaUSKoCAW0fYVq6bQVSm1tS5l2pp03b957v+Mf577Offe994UrICJpuCdJ/7vvvuu+c3/nnnN+56QQCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCA=="
+                }
+            ]
+        }
+    ]
+}

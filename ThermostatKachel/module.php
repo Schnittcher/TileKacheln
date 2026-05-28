@@ -12,6 +12,7 @@ class ThermostatKachel extends IPSModule
         $this->RegisterPropertyInteger('HumidityID', 0);
         $this->RegisterPropertyInteger('ValvePositionID', 0);
         $this->RegisterPropertyInteger('HVACModeID', 0);
+        $this->RegisterPropertyBoolean('UseSymconColors', true);
         $this->RegisterPropertyInteger('ColorHeat', 16739072);
         $this->RegisterPropertyInteger('ColorCool', 2201331);
         $this->RegisterPropertyInteger('ColorAuto', 5025616);
@@ -164,11 +165,12 @@ class ThermostatKachel extends IPSModule
             'valveEditable'      => false,
             'hvacMode'           => null,
             'modeOptions'        => [],
-            'colors'      => [
-                'heat'    => $this->ReadPropertyInteger('ColorHeat'),
-                'cool'    => $this->ReadPropertyInteger('ColorCool'),
-                'auto'    => $this->ReadPropertyInteger('ColorAuto'),
-                'off'     => $this->ReadPropertyInteger('ColorOff'),
+            'useSymconColors' => $this->ReadPropertyBoolean('UseSymconColors'),
+            'colors'          => [
+                'heat' => $this->ReadPropertyInteger('ColorHeat'),
+                'cool' => $this->ReadPropertyInteger('ColorCool'),
+                'auto' => $this->ReadPropertyInteger('ColorAuto'),
+                'off'  => $this->ReadPropertyInteger('ColorOff'),
             ],
         ];
 

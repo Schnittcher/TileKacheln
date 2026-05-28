@@ -230,13 +230,18 @@ function handleMessage(jsonStr) {
     autoBtn.style.display = 'none';
   }
   var colors = d.colors || {};
-  var accentInt = colors.accent || 2201331;
-  var r = (accentInt >> 16) & 0xff;
-  var g = (accentInt >>  8) & 0xff;
-  var b =  accentInt        & 0xff;
   var tile = document.getElementById("tile");
-  tile.style.setProperty('--accent',    intToHex(accentInt));
-  tile.style.setProperty('--accent-bg', 'rgba(' + r + ',' + g + ',' + b + ',.15)');
+  if (d.useSymconColors !== false) {
+    tile.style.setProperty('--accent',    'var(--accent-color,#2196F3)');
+    tile.style.setProperty('--accent-bg', 'color-mix(in srgb,var(--accent-color,#2196F3) 15%,transparent)');
+  } else {
+    var accentInt = colors.accent || 2201331;
+    var r = (accentInt >> 16) & 0xff;
+    var g = (accentInt >>  8) & 0xff;
+    var b =  accentInt        & 0xff;
+    tile.style.setProperty('--accent',    intToHex(accentInt));
+    tile.style.setProperty('--accent-bg', 'rgba(' + r + ',' + g + ',' + b + ',.15)');
+  }
 
   document.getElementById("tile-name").textContent = d.name || "";
 
@@ -378,7 +383,7 @@ if (typeof requestAction === 'undefined') {
       {label: 'Nacht',  value: 80, display: 80},
       {label: 'Zu',     value: 100, display: 100}
     ],
-    colors: {accent: 2201331}
+    useSymconColors: true, colors: {accent: 2201331}
   }));
 }
 </script>

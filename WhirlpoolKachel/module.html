@@ -273,36 +273,55 @@ function intToHex(n){
   return '#'+('000000'+n.toString(16)).slice(-6);
 }
 
-function setButtonColor(id, colorInt){
+function setButtonColor(id, color){
   var btn=document.getElementById(id);
   if(!btn)return;
-  var r=(colorInt>>16)&0xff;
-  var g=(colorInt>>8)&0xff;
-  var b=colorInt&0xff;
-  btn.style.setProperty('--btn-color', intToHex(colorInt));
-  btn.style.setProperty('--btn-bg',    'rgba('+r+','+g+','+b+',.18)');
+  if(typeof color==='string'){
+    btn.style.setProperty('--btn-color', color);
+    btn.style.setProperty('--btn-bg',    'color-mix(in srgb,'+color+' 18%,transparent)');
+  } else {
+    var r=(color>>16)&0xff;
+    var g=(color>>8)&0xff;
+    var b=color&0xff;
+    btn.style.setProperty('--btn-color', intToHex(color));
+    btn.style.setProperty('--btn-bg',    'rgba('+r+','+g+','+b+',.18)');
+  }
 }
 
 function handleMessage(jsonStr){
   var d=JSON.parse(jsonStr);
   var colors=d.colors||{};
+  var useSymcon=d.useSymconColors!==false;
   var accentInt=colors.accent||46296;
-  var r=(accentInt>>16)&0xff;
-  var g=(accentInt>>8)&0xff;
-  var b=accentInt&0xff;
-
   var tile=document.getElementById('tile');
-  tile.style.setProperty('--accent',      intToHex(accentInt));
-  tile.style.setProperty('--accent-bg',   'rgba('+r+','+g+','+b+',.15)');
-  tile.style.setProperty('--water-bg',    'rgba('+r+','+g+','+b+',.07)');
-  tile.style.setProperty('--water-border','rgba('+r+','+g+','+b+',.2)');
+
+  if(useSymcon){
+    tile.style.setProperty('--accent',       'var(--accent-color,#00B4D8)');
+    tile.style.setProperty('--accent-bg',    'color-mix(in srgb,var(--accent-color,#00B4D8) 15%,transparent)');
+    tile.style.setProperty('--water-bg',     'color-mix(in srgb,var(--accent-color,#00B4D8)  7%,transparent)');
+    tile.style.setProperty('--water-border', 'color-mix(in srgb,var(--accent-color,#00B4D8) 20%,transparent)');
+  } else {
+    var r=(accentInt>>16)&0xff;
+    var g=(accentInt>>8)&0xff;
+    var b=accentInt&0xff;
+    tile.style.setProperty('--accent',       intToHex(accentInt));
+    tile.style.setProperty('--accent-bg',    'rgba('+r+','+g+','+b+',.15)');
+    tile.style.setProperty('--water-bg',     'rgba('+r+','+g+','+b+',.07)');
+    tile.style.setProperty('--water-border', 'rgba('+r+','+g+','+b+',.2)');
+  }
 
   document.getElementById('tile-name').textContent=d.name||'';
 
   // Button-Farben
-  setButtonColor('btn-bubbles', colors.bubbles || accentInt);
-  setButtonColor('btn-pump',    colors.pump    || 2201331);
-  setButtonColor('btn-heating', colors.heating || 16739072);
+  if(useSymcon){
+    setButtonColor('btn-bubbles', 'var(--accent-color,#00B4D8)');
+    setButtonColor('btn-pump',    'var(--accent-color,#2196F3)');
+    setButtonColor('btn-heating', 'var(--accent-color,#FF6B00)');
+  } else {
+    setButtonColor('btn-bubbles', colors.bubbles || accentInt);
+    setButtonColor('btn-pump',    colors.pump    || 2201331);
+    setButtonColor('btn-heating', colors.heating || 16739072);
+  }
 
   // Config
   if(d.config){
@@ -410,6 +429,7 @@ if(typeof requestAction==='undefined'){
     bubblesOn:true, pumpOn:true, heatingOn:false,
     power:2340, powerUnit:'W', energy:12.5, energyUnit:'kWh',
     config:{min:20, max:42, step:0.5},
+    useSymconColors:true,
     colors:{accent:46296, bubbles:46296, pump:2201331, heating:16739072}
   }));
 }

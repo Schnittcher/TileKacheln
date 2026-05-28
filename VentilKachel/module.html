@@ -1,0 +1,429 @@
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
+:root{
+  --text:         var(--content-color,#fff);
+  --text-sub:     color-mix(in srgb,var(--content-color,#fff) 55%,transparent);
+  --c-ui-bg:      color-mix(in srgb,var(--content-color,#fff)  5%,transparent);
+  --c-ui-border:  color-mix(in srgb,var(--content-color,#fff)  8%,transparent);
+  --c-btn-bg:     color-mix(in srgb,var(--content-color,#fff)  6%,transparent);
+  --c-btn-border: color-mix(in srgb,var(--content-color,#fff) 13%,transparent);
+  --c-hover:      color-mix(in srgb,var(--content-color,#fff) 14%,transparent);
+}
+
+.tile{
+  width:100%;height:100%;
+  position:relative;overflow:hidden;
+  font-size:12px;background:transparent;
+  color:var(--text,#fff);
+  padding:1em 1em 0.75em;
+  box-shadow:0 4px 20px rgba(0,0,0,.45);
+  display:flex;flex-direction:column;
+}
+.tile::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--accent,#2196F3);transition:background .3s;
+}
+
+/* ── Header ───────────────────────────────────────── */
+.header{
+  display:flex;align-items:center;gap:0.4em;
+  margin-bottom:0.5em;
+}
+.tile-name{
+  font-size:1.08em;font-weight:500;
+  color:var(--text-sub);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  min-width:0;flex:1;
+}
+.status-badge{
+  font-size:0.73em;padding:0.12em 0.55em;
+  border-radius:1em;border:1px solid;
+  white-space:nowrap;flex-shrink:0;
+  display:none;cursor:default;
+  transition:all .2s;
+}
+.status-badge.visible{display:block}
+.status-badge.open{
+  color:var(--accent);
+  border-color:var(--accent);
+  background:var(--accent-bg);
+}
+.status-badge.closed{
+  color:var(--text-sub);
+  border-color:var(--c-ui-border);
+  background:var(--c-ui-bg);
+}
+.status-badge.editable{cursor:pointer}
+.status-badge.editable:hover{opacity:.8}
+.temp-badge{
+  font-size:1em;color:var(--text-sub);
+  white-space:nowrap;flex-shrink:0;
+  display:none;
+}
+.temp-badge.visible{display:block}
+
+/* ── Main Content ─────────────────────────────────── */
+.main-area{
+  flex:1;min-height:0;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:0.3em;
+}
+
+/* ── Valve SVG ────────────────────────────────────── */
+.valve-wrap{
+  width:100%;
+  display:flex;align-items:center;justify-content:center;
+}
+.valve-wrap svg{
+  width:82%;max-width:240px;overflow:visible;
+}
+
+/* ── Position Display ─────────────────────────────── */
+.pos-section{
+  width:100%;text-align:center;
+}
+.pos-value{
+  font-size:var(--pos-size,2.2em);font-weight:200;
+  letter-spacing:-0.03em;line-height:1.1;
+  color:var(--accent);
+  transition:color .3s;
+}
+.pos-bar-wrap{
+  height:0.3em;border-radius:1em;
+  background:var(--accent-bg);
+  overflow:hidden;margin:0.28em 0.75em 0;
+  transition:background .3s;
+}
+.pos-bar{
+  height:100%;border-radius:1em;
+  background:var(--accent);
+  transition:width .5s ease, background .3s;
+  will-change:width;
+}
+
+/* ── Preset Buttons ───────────────────────────────── */
+.preset-row{
+  display:flex;gap:0.35em;
+  margin-top:0.35em;
+}
+.preset-btn{
+  flex:1;padding:0.38em 0.1em;
+  border-radius:0.67em;
+  border:1px solid var(--c-btn-border);
+  background:var(--c-btn-bg);
+  color:var(--text-sub);
+  font-size:0.8em;cursor:pointer;
+  transition:all .15s;outline:none;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  line-height:1.3;
+}
+.preset-btn:hover:not(:disabled){background:var(--c-hover)}
+.preset-btn:active:not(:disabled){transform:scale(.93)}
+.preset-btn.active{
+  border-color:var(--accent);
+  color:var(--accent);
+  background:var(--accent-bg);
+}
+.preset-btn:disabled{
+  opacity:.35;cursor:default;pointer-events:none;
+}
+
+/* ── Wasserströmung in Rohren ─────────────────────── */
+#valve-wave-g{
+  transform-box:fill-box;   /* % relativ zur eigenen Bounding-Box */
+}
+.pipe-flow-on #valve-wave-g{
+  animation:pipe-wave var(--flow-dur,1.4s) linear infinite;
+}
+@keyframes pipe-wave{
+  from{transform:translateX(0)}
+  to  {transform:translateX(-50%)}
+}
+</style>
+
+<div id="tile" class="tile">
+
+  <div class="header">
+    <span class="tile-name" id="tile-name">Ventil</span>
+    <span class="status-badge" id="status-badge" onclick="toggleStatus()">––</span>
+    <span class="temp-badge"   id="temp-badge"></span>
+  </div>
+
+  <div class="main-area">
+
+    <!-- Butterfly-Ventil SVG ─────────────────────────
+         viewBox 0 0 120 72
+         Kreis: cx=60 cy=36 r=19  |  Rohr: y=28–44
+         Kreisschnitt bei y=28: x ≈ 43 / 77
+         Welle: 240 Einh. breit (2×), nahtlose Schleife via translateX(-50%)
+    ───────────────────────────────────────────────── -->
+    <div class="valve-wrap">
+      <svg id="valve-svg" viewBox="0 0 120 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+        <defs>
+          <!-- Beschneidet Wasserströmung auf linke + rechte Rohrabschnitte -->
+          <clipPath id="pipe-clip">
+            <rect x="0"  y="28" width="43" height="16"/>
+            <rect x="77" y="28" width="43" height="16"/>
+          </clipPath>
+        </defs>
+
+        <!-- ① Wasserströmung (unterste Ebene) ──────── -->
+        <g clip-path="url(#pipe-clip)">
+          <!-- Statische Wasserfläche (Hintergrund) -->
+          <rect id="pipe-water-bg" x="0" y="33" width="120" height="11"
+                fill="var(--accent-bg)" opacity="0" style="transition:opacity .5s"/>
+          <!-- Scrollende Welle: 240 Einh. = 2 × Viewport → translateX(-50%) = −120 Einh. -->
+          <!-- Periode 20, Zentrum y=33, Amplitude ±2 → Welle y=31…35, Füllung y=31…44 -->
+          <g id="valve-wave-g">
+            <path id="valve-wave-path" opacity="0" style="transition:opacity .5s"
+                  fill="var(--accent-bg)"
+                  d="M0,33 C4,31 6,31 10,33 C14,35 16,35 20,33
+                     C24,31 26,31 30,33 C34,35 36,35 40,33
+                     C44,31 46,31 50,33 C54,35 56,35 60,33
+                     C64,31 66,31 70,33 C74,35 76,35 80,33
+                     C84,31 86,31 90,33 C94,35 96,35 100,33
+                     C104,31 106,31 110,33 C114,35 116,35 120,33
+                     C124,31 126,31 130,33 C134,35 136,35 140,33
+                     C144,31 146,31 150,33 C154,35 156,35 160,33
+                     C164,31 166,31 170,33 C174,35 176,35 180,33
+                     C184,31 186,31 190,33 C194,35 196,35 200,33
+                     C204,31 206,31 210,33 C214,35 216,35 220,33
+                     C224,31 226,31 230,33 C234,35 236,35 240,33
+                     L240,44 L0,44 Z"/>
+          </g>
+        </g>
+
+        <!-- ② Rohrwände (über Wasser) ──────────────── -->
+        <line x1="0"   y1="28" x2="43"  y2="28" stroke="var(--text-sub)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="0"   y1="44" x2="43"  y2="44" stroke="var(--text-sub)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="77"  y1="28" x2="120" y2="28" stroke="var(--text-sub)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="77"  y1="44" x2="120" y2="44" stroke="var(--text-sub)" stroke-width="1.5" stroke-linecap="round"/>
+
+        <!-- ③ Ventilkörper (verdeckt Welle im Mittenteil) -->
+        <circle cx="60" cy="36" r="19" fill="var(--c-ui-bg)" stroke="var(--text-sub)" stroke-width="1.5"/>
+
+        <!-- ④ Stellantrieb oben ──────────────────────── -->
+        <line x1="60" y1="17" x2="60" y2="11" stroke="var(--text-sub)" stroke-width="1.5" stroke-linecap="round"/>
+        <rect x="54" y="4" width="12" height="8" rx="2"
+              fill="var(--c-ui-bg)" stroke="var(--text-sub)" stroke-width="1.5"/>
+
+        <!-- ⑤ Ventilklappe (dreht sich mit Position)
+             horizontal = 100 % offen  |  rotate(90) = 0 % geschlossen -->
+        <g id="valve-plate" transform="rotate(90,60,36)">
+          <line x1="43" y1="36" x2="77" y2="36"
+                stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/>
+        </g>
+
+        <!-- ⑥ Drehpunkt ──────────────────────────────── -->
+        <circle cx="60" cy="36" r="2.8" fill="var(--accent)"/>
+
+      </svg>
+    </div>
+
+    <div class="pos-section">
+      <div class="pos-value" id="pos-value">–</div>
+      <div class="pos-bar-wrap">
+        <div class="pos-bar" id="pos-bar" style="width:0%"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="preset-row">
+    <button class="preset-btn" id="preset-0" onclick="applyPreset(0)" disabled></button>
+    <button class="preset-btn" id="preset-1" onclick="applyPreset(1)" disabled></button>
+    <button class="preset-btn" id="preset-2" onclick="applyPreset(2)" disabled></button>
+    <button class="preset-btn" id="preset-3" onclick="applyPreset(3)" disabled></button>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  if(typeof ResizeObserver==='undefined')return;
+  var t=document.getElementById('tile');
+  new ResizeObserver(function(e){
+    var bs=e[0].borderBoxSize&&e[0].borderBoxSize[0];
+    var w=bs?bs.inlineSize:t.offsetWidth;
+    var h=bs?bs.blockSize:t.offsetHeight;
+    var base=Math.max(10,Math.min(20,h/18,w/14));
+    t.style.fontSize=base.toFixed(2)+'px';
+    var posSize=Math.max(base*1.8,Math.min(base*3.2,h*0.17,w*0.3));
+    t.style.setProperty('--pos-size',(posSize/base).toFixed(3)+'em');
+  }).observe(t);
+})();
+
+var _presets      = [{name:'Zu',value:0},{name:'25 %',value:25},{name:'50 %',value:50},{name:'Auf',value:100}];
+var _posEditable  = false;
+var _statusEditable = false;
+var _currentPos   = null;
+var _currentStatus = null;
+var _posMin       = 0;
+var _posMax       = 100;
+var _posDigits    = 0;
+var _posSuffix    = ' %';
+
+function intToHex(n){
+  return '#'+('000000'+n.toString(16)).slice(-6);
+}
+
+function normalizePct(val){
+  if(_posMax<=_posMin)return 0;
+  return Math.max(0,Math.min(100,(val-_posMin)/(_posMax-_posMin)*100));
+}
+
+function updateValveAngle(pct){
+  // 0 % = geschlossen (90°), 100 % = offen (0°)
+  var angle=(1-pct/100)*90;
+  document.getElementById('valve-plate').setAttribute('transform',
+    'rotate('+angle.toFixed(2)+',60,36)');
+
+  // Wasserströmung: ab > 3 % Öffnung einblenden
+  var flowing = pct > 3;
+  var svgEl = document.getElementById('valve-svg');
+  if(svgEl) svgEl.classList.toggle('pipe-flow-on', flowing);
+
+  // Animationsgeschwindigkeit: schneller bei mehr Öffnung (0.7 s … 2.0 s)
+  var dur = flowing ? Math.max(0.7, 2.0 - pct/65).toFixed(2)+'s' : '1.4s';
+  document.getElementById('tile').style.setProperty('--flow-dur', dur);
+
+  // Sichtbarkeit der Wasser-Elemente
+  var bgOp   = flowing ? '0.6' : '0';
+  var waveOp = flowing ? '1'   : '0';
+  document.getElementById('pipe-water-bg').style.opacity   = bgOp;
+  document.getElementById('valve-wave-path').style.opacity = waveOp;
+}
+
+function updateActivePresets(pos){
+  for(var i=0;i<4;i++){
+    var btn=document.getElementById('preset-'+i);
+    if(btn) btn.classList.toggle('active', pos!==null && Math.abs(_presets[i].value-pos)<0.5);
+  }
+}
+
+function handleMessage(jsonStr){
+  var d=JSON.parse(jsonStr);
+  var colors=d.colors||{};
+  var useSymcon=d.useSymconColors!==false;
+  var tile=document.getElementById('tile');
+
+  // Akzentfarben
+  if(useSymcon){
+    tile.style.setProperty('--accent',    'var(--accent-color,#2196F3)');
+    tile.style.setProperty('--accent-bg', 'color-mix(in srgb,var(--accent-color,#2196F3) 15%,transparent)');
+  } else {
+    var ai=colors.accent||2201331;
+    var r=(ai>>16)&0xff, g=(ai>>8)&0xff, b=ai&0xff;
+    tile.style.setProperty('--accent',    intToHex(ai));
+    tile.style.setProperty('--accent-bg', 'rgba('+r+','+g+','+b+',.15)');
+  }
+
+  // Name
+  document.getElementById('tile-name').textContent=d.name||'';
+
+  // Status-Badge
+  var badge=document.getElementById('status-badge');
+  _currentStatus  = d.status;
+  _statusEditable = d.statusEditable===true;
+  if(d.status!==null&&d.status!==undefined){
+    badge.classList.add('visible');
+    badge.classList.toggle('open',   d.status===true);
+    badge.classList.toggle('closed', d.status===false);
+    badge.classList.toggle('editable', _statusEditable);
+    badge.textContent=d.status?'Offen':'Zu';
+  } else {
+    badge.classList.remove('visible');
+  }
+
+  // Temperatur
+  var tempEl=document.getElementById('temp-badge');
+  if(d.temperature!==null&&d.temperature!==undefined){
+    tempEl.textContent=d.temperature.toFixed(1)+(d.tempSuffix||'°C');
+    tempEl.classList.add('visible');
+  } else {
+    tempEl.classList.remove('visible');
+  }
+
+  // Positions-Konfiguration
+  _posMin     = d.positionMin    !=null ? d.positionMin    : 0;
+  _posMax     = d.positionMax    !=null ? d.positionMax    : 100;
+  _posDigits  = d.positionDigits !=null ? d.positionDigits : 0;
+  _posSuffix  = d.positionSuffix !=null ? d.positionSuffix : ' %';
+  _posEditable= d.positionEditable===true;
+
+  // Positionsanzeige
+  var posEl=document.getElementById('pos-value');
+  var barEl=document.getElementById('pos-bar');
+
+  if(d.position!==null&&d.position!==undefined){
+    _currentPos=parseFloat(d.position);
+    var pct=normalizePct(_currentPos);
+    posEl.textContent=_currentPos.toFixed(_posDigits)+_posSuffix;
+    barEl.style.width=pct.toFixed(1)+'%';
+    updateValveAngle(pct);
+    updateActivePresets(_currentPos);
+  } else {
+    _currentPos=null;
+    posEl.textContent='–';
+    barEl.style.width='0%';
+    updateValveAngle(0);
+    updateActivePresets(null);
+  }
+
+  // Presets
+  if(d.presets&&Array.isArray(d.presets)) _presets=d.presets;
+  for(var i=0;i<4;i++){
+    var btn=document.getElementById('preset-'+i);
+    if(!btn)continue;
+    var pr=_presets[i]||{name:'',value:0};
+    btn.textContent=pr.name||'';
+    btn.disabled=!_posEditable;
+    btn.classList.toggle('active',
+      _currentPos!==null && Math.abs(pr.value-_currentPos)<0.5);
+  }
+}
+
+function applyPreset(i){
+  if(!_posEditable)return;
+  var pr=_presets[i];
+  if(!pr)return;
+  _currentPos=pr.value;
+  var pct=normalizePct(pr.value);
+  document.getElementById('pos-value').textContent=pr.value.toFixed(_posDigits)+_posSuffix;
+  document.getElementById('pos-bar').style.width=pct.toFixed(1)+'%';
+  updateValveAngle(pct);
+  updateActivePresets(pr.value);
+  if(typeof requestAction!=='undefined') requestAction('SetPosition', pr.value);
+}
+
+function toggleStatus(){
+  if(!_statusEditable||_currentStatus===null)return;
+  _currentStatus=!_currentStatus;
+  var badge=document.getElementById('status-badge');
+  badge.classList.toggle('open',   _currentStatus);
+  badge.classList.toggle('closed', !_currentStatus);
+  badge.textContent=_currentStatus?'Offen':'Zu';
+  if(typeof requestAction!=='undefined') requestAction('SetStatus', _currentStatus?1:0);
+}
+
+if(typeof requestAction==='undefined'){
+  handleMessage(JSON.stringify({
+    name:'Warmwasser-Ventil',
+    temperature:42.3, tempSuffix:'°C',
+    position:50, positionEditable:true,
+    positionMin:0, positionMax:100, positionSuffix:' %', positionDigits:0,
+    status:true, statusEditable:true,
+    useSymconColors:true,
+    colors:{accent:2201331},
+    presets:[
+      {name:'Zu',   value:0},
+      {name:'25 %', value:25},
+      {name:'50 %', value:50},
+      {name:'Auf',  value:100}
+    ]
+  }));
+}
+</script>

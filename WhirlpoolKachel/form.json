@@ -86,6 +86,21 @@
         {
             "type": "Label",
             "bold": true,
+            "caption": "Darstellung"
+        },
+        {
+            "name": "UseSymconColors",
+            "type": "CheckBox",
+            "caption": "Symcon-Akzentfarbe verwenden (empfohlen)",
+            "value": true
+        },
+        {
+            "type": "Label",
+            "caption": "Eigene Farben (nur wenn Symcon-Akzentfarbe deaktiviert):"
+        },
+        {
+            "type": "Label",
+            "bold": true,
             "caption": "Akzentfarbe"
         },
         {

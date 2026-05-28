@@ -122,7 +122,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
               fill="rgba(0,0,0,0.4)"/>
 
         <!-- Wasser-Füllung -->
-        <path id="boiler-fill" d="" fill="#2176ae" opacity="0.7"/>
+        <path id="boiler-fill" d="" fill="var(--accent)" opacity="0.7"/>
 
 
         <!-- Körper Rahmen -->
@@ -234,15 +234,20 @@ function updateBoilerViz(tempTop, tempOn, tempOff){
 function handleMessage(jsonStr){
   var d=JSON.parse(jsonStr);
   var colors=d.colors||{};
-  var accentInt=colors.accent||16724736;
-  var pumpInt  =colors.pumpOn ||2201331;
-  var r=(accentInt>>16)&0xff,g=(accentInt>>8)&0xff,b=accentInt&0xff;
-  var pr=(pumpInt>>16)&0xff, pg=(pumpInt>>8)&0xff, pb=pumpInt&0xff;
-
   var tile=document.getElementById('tile');
-  tile.style.setProperty('--accent',     intToHex(accentInt));
-  tile.style.setProperty('--pump-color', intToHex(pumpInt));
-  tile.style.setProperty('--pump-bg',    'rgba('+pr+','+pg+','+pb+',.12)');
+  if(d.useSymconColors!==false){
+    tile.style.setProperty('--accent',     'var(--accent-color,#FF3A00)');
+    tile.style.setProperty('--pump-color', 'var(--accent-color,#2196F3)');
+    tile.style.setProperty('--pump-bg',    'color-mix(in srgb,var(--accent-color,#2196F3) 12%,transparent)');
+  } else {
+    var accentInt=colors.accent||16724736;
+    var pumpInt  =colors.pumpOn ||2201331;
+    var r=(accentInt>>16)&0xff,g=(accentInt>>8)&0xff,b=accentInt&0xff;
+    var pr=(pumpInt>>16)&0xff, pg=(pumpInt>>8)&0xff, pb=pumpInt&0xff;
+    tile.style.setProperty('--accent',     intToHex(accentInt));
+    tile.style.setProperty('--pump-color', intToHex(pumpInt));
+    tile.style.setProperty('--pump-bg',    'rgba('+pr+','+pg+','+pb+',.12)');
+  }
 
   document.getElementById('tile-name').textContent=d.name||'';
 
@@ -280,7 +285,7 @@ if(typeof requestAction==='undefined'){
     name:'Brauchwasser',
     tempTop:58.4, tempOn:62.0, tempOff:45.0,
     pumpOn:true,
-    colors:{accent:16724736,pumpOn:2201331}
+    useSymconColors:true, colors:{accent:16724736,pumpOn:2201331}
   }));
 }
 </script>
