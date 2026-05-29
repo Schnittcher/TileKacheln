@@ -36,8 +36,9 @@
         {
             "name": "TargetTemperatureID",
             "type": "SelectVariable",
-            "caption": "Soll-Temperatur (Float)",
+            "caption": "Soll-Temperatur (Integer oder Float)",
             "validVariableTypes": [
+                1,
                 2
             ],
             "value": 0

@@ -27,7 +27,7 @@
         {
             "name": "TargetTemperatureID",
             "type": "SelectVariable",
-            "caption": "Ziel-Temperatur (Sollwert)",
+            "caption": "Soll-Temperatur",
             "validVariableTypes": [
                 2
             ],
