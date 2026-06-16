@@ -30,13 +30,11 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;
 }
 
-/* ── Steuer-Zeile (Power + Settings) ────────────────── */
-.ctrl-row{
-  display:flex;align-items:center;justify-content:center;
-  gap:0.5em;margin-bottom:0.5em;
-}
+/* ── Steuer-Zeilen ───────────────────────────────────── */
+.ctrl-rows{display:flex;flex-direction:column;gap:0.4em;margin-bottom:0.5em;}
+.ctrl-row{display:flex;align-items:center;justify-content:center;gap:0.5em;}
 .ctrl-btn{
-  width:2.6em;height:2.6em;border-radius:50%;
+  width:2.6em;height:2.6em;border-radius:50%;flex-shrink:0;font-size:inherit;
   border:1px solid var(--c-btn-border);background:var(--c-btn-bg);
   color:var(--text-sub);cursor:pointer;outline:none;
   display:none;align-items:center;justify-content:center;
@@ -52,13 +50,27 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 
 /* ── Ist-Temperatur (groß) ───────────────────────────── */
 .current-temp-area{
-  text-align:center;flex:1;min-height:0;overflow:hidden;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  margin:0.25em 0 0.5em;
+  flex:1;min-height:0;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  margin:0.25em 0 0;
 }
 .current-temp-val{
   font-size:var(--temp-size,4em);font-weight:200;
   line-height:1.1;letter-spacing:-0.05em;white-space:nowrap;
+}
+
+/* ── Info-Bar (Außentemp, Feuchte, Leistung) ─────────── */
+.info-bar{
+  display:flex;align-items:center;justify-content:center;
+  flex-wrap:wrap;gap:0.25em 0.9em;margin-bottom:0.3em;
+  font-size:0.82em;
+}
+.info-item{display:flex;align-items:center;gap:0.28em;color:var(--text-sub);}
+.info-item span{font-weight:500;color:var(--text);}
+.info-icon{
+  width:0.85em;height:0.85em;flex:0 0 auto;
+  stroke:currentColor;fill:none;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round;
 }
 
 /* ── Soll-Temperatur-Steuerung ──────────────────────── */
@@ -85,13 +97,32 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 .setpoint-control.readonly{justify-content:center}
 .sp-val{font-size:1.67em;font-weight:300;min-width:3em;text-align:center;white-space:nowrap;}
 
+/* ── Modus-Icon-Buttons (in ctrl-row) ───────────────── */
+.mode-icon-btns{display:flex;gap:0.4em;align-items:center;}
+.mode-icon-btn{
+  width:2.6em;height:2.6em;border-radius:50%;
+  border:1px solid var(--c-btn-border);background:var(--c-btn-bg);
+  color:var(--text-sub);cursor:pointer;outline:none;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,color .15s,border-color .15s;
+  font-size:1em;
+}
+.mode-icon-btn:hover{background:var(--c-hover);color:var(--text)}
+.mode-icon-btn:active{transform:scale(.88)}
+.mode-icon-btn.active{
+  border-color:var(--accent-sel);color:var(--accent-sel);background:var(--accent-sel-bg);
+}
+.ctrl-sep{
+  width:1px;height:1.4em;background:var(--c-btn-border);flex:0 0 auto;
+}
+
 /* ── Sektion-Label ───────────────────────────────────── */
 .section-label{
   font-size:0.85em;color:var(--text-sub);text-transform:uppercase;
   letter-spacing:.5px;margin-top:0.5em;margin-bottom:0.25em;
 }
 
-/* ── Option-Buttons (Modus & Lüfter) ────────────────── */
+/* ── Option-Buttons (Lüfter) ─────────────────────────── */
 .opt-btn{
   flex:1 1 auto;padding:0.42em 0.75em;border-radius:0.5em;
   border:1px solid var(--c-ui-border);background:var(--c-ui-bg);
@@ -103,6 +134,24 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
   border-color:var(--accent-sel);color:var(--accent-sel);background:var(--accent-sel-bg);
 }
 .opt-row{display:flex;gap:0.33em;flex-wrap:wrap;justify-content:center;margin-top:0.5em}
+
+/* ── Info-Chips ──────────────────────────────────────── */
+.info-strip{display:flex;flex-wrap:wrap;gap:0.4em;margin-top:0.4em;}
+.info-chip{
+  flex:1 1 auto;min-width:0;
+  padding:0.3em 0.6em;
+  background:var(--c-ui-bg);
+  border-radius:0.6em;
+  border:1px solid var(--c-ui-border);
+}
+.info-chip-label{
+  font-size:0.68em;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--text-sub);margin-bottom:0.1em;white-space:nowrap;
+}
+.info-chip-value{
+  font-size:0.95em;font-weight:500;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
 
 /* ── Popup-Overlay ───────────────────────────────────── */
 .popup{
@@ -149,34 +198,57 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
     <div class="current-temp-val" id="current-temp-val" style="visibility:hidden">--&deg;</div>
   </div>
 
-  <!-- Steuer-Zeile: Power (immer) + Settings (nur Compact-Modus) -->
-  <div class="ctrl-row">
-    <button id="power-btn" class="ctrl-btn" onclick="togglePower()">
-      <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2.2" stroke-linecap="round" style="pointer-events:none">
-        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
-        <line x1="12" y1="2" x2="12" y2="12"/>
-      </svg>
-    </button>
-    <button id="silent-btn" class="ctrl-btn" onclick="toggleSilent()" title="Silent Mode">
-      <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-      </svg>
-    </button>
-    <button id="settings-btn" class="ctrl-btn" onclick="openPopup()">
-      <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none">
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33
-                 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33
-                 l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0
-                 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06
-                 A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51
-                 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9
-                 a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-      </svg>
-    </button>
+  <!-- Info-Bar: Außentemp · Feuchte · Leistung -->
+  <div id="info-bar" class="info-bar">
+    <div class="info-item" id="info-outdoor" style="display:none">
+      <svg class="info-icon" viewBox="0 0 24 24"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+      <span id="info-outdoor-val">–</span>
+    </div>
+    <div class="info-item" id="info-humidity" style="display:none">
+      <svg class="info-icon" viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+      <span id="info-humidity-val">–</span>
+    </div>
+    <div class="info-item" id="info-power" style="display:none">
+      <svg class="info-icon" viewBox="0 0 24 24"><polyline points="13 2 13 9 20 9 11 22 11 15 4 15 13 2"/></svg>
+      <span id="info-power-val">–</span>
+    </div>
+  </div>
+
+  <!-- Steuer-Zeilen -->
+  <div class="ctrl-rows">
+    <!-- Zeile 1: Power + Silent + Settings -->
+    <div class="ctrl-row">
+      <button id="power-btn" class="ctrl-btn" onclick="togglePower()">
+        <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.2" stroke-linecap="round" style="pointer-events:none">
+          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+          <line x1="12" y1="2" x2="12" y2="12"/>
+        </svg>
+      </button>
+      <button id="silent-btn" class="ctrl-btn" onclick="toggleSilent()" title="Silent Mode">
+        <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+      <button id="settings-btn" class="ctrl-btn" onclick="openPopup()">
+        <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33
+                   1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33
+                   l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0
+                   1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06
+                   A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51
+                   1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9
+                   a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+    <!-- Zeile 2: Modus-Icons -->
+    <div id="ctrl-row-2" class="ctrl-row" style="display:none">
+      <div id="mode-icon-btns" class="mode-icon-btns"></div>
+    </div>
   </div>
 
   <!-- Soll-Temperatur -->
@@ -189,10 +261,10 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
     </div>
   </div>
 
-  <!-- Modus (inline) -->
-  <div id="modus-section" style="display:none">
-    <div class="section-label">Modus</div>
-    <div class="opt-row" id="modus-btns"></div>
+  <!-- Luftverteilung (inline) -->
+  <div id="airdist-section" style="display:none">
+    <div class="section-label">Luftverteilung</div>
+    <div class="opt-row" id="airdist-btns"></div>
   </div>
 
   <!-- Lüfterstufe (inline) -->
@@ -208,9 +280,9 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
       <button class="popup-close" onclick="closePopup()">&#x2715;</button>
     </div>
     <div class="popup-body">
-      <div id="popup-modus-section" style="display:none">
-        <div class="section-label">Modus</div>
-        <div class="opt-row" id="popup-modus-btns"></div>
+      <div id="popup-airdist-section" style="display:none">
+        <div class="section-label">Luftverteilung</div>
+        <div class="opt-row" id="popup-airdist-btns"></div>
       </div>
       <div id="popup-fan-section" style="display:none">
         <div class="section-label">Lüfter</div>
@@ -269,27 +341,24 @@ var COMPACT_EXIT  = 0.38;
 
 function checkCompact(forceEnterThreshold){
   if(!_lastData) return;
-  var hasModus = _lastData.modusOptions && _lastData.modusOptions.length > 0;
-  var hasFan   = _lastData.fanSpeedOptions && _lastData.fanSpeedOptions.length > 0;
-  if(!hasModus && !hasFan){ applyCompact(false); return; }
+  var hasAirDist = _lastData.airDistributionOptions && _lastData.airDistributionOptions.length > 0;
+  var hasFan     = _lastData.fanSpeedOptions && _lastData.fanSpeedOptions.length > 0;
+  if(!hasAirDist && !hasFan){ applyCompact(false); return; }
 
-  var m = document.getElementById('modus-section');
+  var a = document.getElementById('airdist-section');
   var f = document.getElementById('fan-section');
   var t = document.getElementById('tile');
 
-  // Temporär einblenden um die echte Höhe zu messen (kein visueller Flash –
-  // Browser malt erst am Ende des JS-Tasks)
-  if(hasModus) m.style.removeProperty('display');
-  if(hasFan)   f.style.removeProperty('display');
+  if(hasAirDist) a.style.removeProperty('display');
+  if(hasFan)     f.style.removeProperty('display');
 
-  var tileH    = t.offsetHeight;                   // erzwingt Reflow
-  var sectionH = (hasModus ? m.offsetHeight : 0) + (hasFan ? f.offsetHeight : 0);
+  var tileH    = t.offsetHeight;
+  var sectionH = (hasAirDist ? a.offsetHeight : 0) + (hasFan ? f.offsetHeight : 0);
   var areaH    = document.getElementById('current-temp-area').offsetHeight;
 
-  // Wieder ausblenden wenn wir gerade im Compact-Modus waren
   if(_compactMode){
-    if(hasModus) m.style.display = 'none';
-    if(hasFan)   f.style.display = 'none';
+    if(hasAirDist) a.style.display = 'none';
+    if(hasFan)     f.style.display = 'none';
   }
 
   var ratio     = tileH > 0 ? sectionH / tileH : 1;
@@ -300,20 +369,20 @@ function checkCompact(forceEnterThreshold){
 function applyCompact(compact){
   if(_compactMode === compact) return;
   _compactMode = compact;
-  var d        = _lastData || {};
-  var hasModus = d.modusOptions && d.modusOptions.length > 0;
-  var hasFan   = d.fanSpeedOptions && d.fanSpeedOptions.length > 0;
-  var m        = document.getElementById('modus-section');
-  var f        = document.getElementById('fan-section');
-  var btn      = document.getElementById('settings-btn');
+  var d          = _lastData || {};
+  var hasAirDist = d.airDistributionOptions && d.airDistributionOptions.length > 0;
+  var hasFan     = d.fanSpeedOptions && d.fanSpeedOptions.length > 0;
+  var a          = document.getElementById('airdist-section');
+  var f          = document.getElementById('fan-section');
+  var btn        = document.getElementById('settings-btn');
 
   if(compact){
-    if(hasModus) m.style.display = 'none';
-    if(hasFan)   f.style.display = 'none';
+    if(hasAirDist) a.style.display = 'none';
+    if(hasFan)     f.style.display = 'none';
     btn.classList.add('visible');
   } else {
-    if(hasModus) m.style.removeProperty('display');
-    if(hasFan)   f.style.removeProperty('display');
+    if(hasAirDist) a.style.removeProperty('display');
+    if(hasFan)     f.style.removeProperty('display');
     btn.classList.remove('visible');
     closePopup();
   }
@@ -323,8 +392,8 @@ function applyCompact(compact){
 // ── Popup ───────────────────────────────────────────────
 function openPopup(){
   if(!_lastData) return;
-  renderOptions('popup-modus-section','popup-modus-btns',
-                _lastData.modusOptions, _lastData.modus, 'SetModus');
+  renderOptions('popup-airdist-section','popup-airdist-btns',
+                _lastData.airDistributionOptions, _lastData.airDistribution, 'SetAirDistribution');
   renderOptions('popup-fan-section','popup-fan-btns',
                 _lastData.fanSpeedOptions, _lastData.fanSpeed, 'SetFanSpeed');
   document.getElementById('popup').classList.add('open');
@@ -446,17 +515,46 @@ function handleMessage(jsonStr){
     ta.style.display = 'none';
   }
 
-  // Modus & Lüfter (inline) – erst alles zeigen, dann Compact-Check
-  renderOptions('modus-section', 'modus-btns', d.modusOptions, d.modus, 'SetModus');
-  renderOptions('fan-section',   'fan-btns',   d.fanSpeedOptions, d.fanSpeed, 'SetFanSpeed');
+  // Modus als Icons in ctrl-row
+  renderModeIcons(d.modusOptions, d.modus);
+
+  // Luftverteilung + Lüfter (inline) – erst zeigen, dann Compact-Check
+  renderOptions('airdist-section', 'airdist-btns', d.airDistributionOptions, d.airDistribution, 'SetAirDistribution');
+  renderOptions('fan-section',     'fan-btns',     d.fanSpeedOptions, d.fanSpeed, 'SetFanSpeed');
 
   // Popup aktualisieren falls gerade offen
   if(document.getElementById('popup').classList.contains('open')){
-    renderOptions('popup-modus-section','popup-modus-btns',
-                  d.modusOptions, d.modus, 'SetModus');
+    renderOptions('popup-airdist-section','popup-airdist-btns',
+                  d.airDistributionOptions, d.airDistribution, 'SetAirDistribution');
     renderOptions('popup-fan-section','popup-fan-btns',
                   d.fanSpeedOptions, d.fanSpeed, 'SetFanSpeed');
   }
+
+  // Seiten-Stats um die Temperatur
+  function fmtNum(v, sfx){ return v===null||v===undefined ? null : v+(sfx&&sfx.charAt(0)==='°'?'':' ')+(sfx||''); }
+  function setInfoItem(id, show, val){
+    var el = document.getElementById(id);
+    el.style.display = show ? '' : 'none';
+    if(show && val !== null) document.getElementById(id+'-val').textContent = val;
+  }
+
+  var hasOutdoor = d.outdoorTemp     !== null && d.outdoorTemp     !== undefined;
+  var hasHumIn   = d.humidityIndoor  !== null && d.humidityIndoor  !== undefined;
+  var hasHumOut  = d.humidityOutdoor !== null && d.humidityOutdoor !== undefined;
+  var hasPower   = d.power           !== null && d.power           !== undefined;
+
+  setInfoItem('info-outdoor', hasOutdoor, fmtNum(d.outdoorTemp, d.outdoorTempSuffix||'°C'));
+
+  var humVal = null;
+  if(hasHumIn && hasHumOut){
+    humVal = d.humidityIndoor+' '+(d.humidityIndoorSuffix||'%')+' / '+d.humidityOutdoor+' '+(d.humidityOutdoorSuffix||'%');
+  } else if(hasHumIn){
+    humVal = fmtNum(d.humidityIndoor, d.humidityIndoorSuffix||'%');
+  } else if(hasHumOut){
+    humVal = fmtNum(d.humidityOutdoor, d.humidityOutdoorSuffix||'%');
+  }
+  setInfoItem('info-humidity', hasHumIn||hasHumOut, humVal);
+  setInfoItem('info-power', hasPower, fmtNum(d.power, d.powerSuffix||'W'));
 
   // Compact-Status neu bestimmen (forceEnterThreshold=true für saubere Neubewertung)
   _compactMode = false;
@@ -464,6 +562,56 @@ function handleMessage(jsonStr){
   checkCompact(true);
 
   updateTempSize();
+}
+
+// ── Modus-Icon-Buttons ──────────────────────────────────
+var _MI = {
+  cool: '<path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07"/>',
+  heat: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>',
+  auto: '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+  dry:  '<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>',
+  fan:  '<path d="M9.59 4.59A2 2 0 1 1 11 8H2"/><path d="M11.59 19.41A2 2 0 1 0 13 16H2"/><path d="M16.27 3.73A2.5 2.5 0 1 1 18.5 8H2"/>'
+};
+
+function _getModeIcon(label){
+  var l = (label||'').toLowerCase();
+  if(/kühl|cool|kalt/.test(l))       return _MI.cool;
+  if(/heiz|heat|warm|wärm/.test(l))  return _MI.heat;
+  if(/auto/.test(l))                  return _MI.auto;
+  if(/trock|dry/.test(l))            return _MI.dry;
+  if(/lüft|fan|vent/.test(l))        return _MI.fan;
+  return null;
+}
+
+function renderModeIcons(options, current){
+  var c   = document.getElementById('mode-icon-btns');
+  var row = document.getElementById('ctrl-row-2');
+  c.innerHTML = '';
+  if(!options || options.length === 0){ row.style.display = 'none'; return; }
+  row.style.removeProperty('display');
+  options.forEach(function(opt){
+    var btn = document.createElement('button');
+    btn.className = 'mode-icon-btn' + (opt.value === current ? ' active' : '');
+    btn.title = opt.label;
+    var iconPath = _getModeIcon(opt.label);
+    if(iconPath){
+      btn.innerHTML = '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"'
+        + ' stroke="currentColor" stroke-width="2.2" stroke-linecap="round"'
+        + ' stroke-linejoin="round" style="pointer-events:none">' + iconPath + '</svg>';
+    } else {
+      btn.textContent = opt.label.substring(0, 2);
+      btn.style.fontSize = '0.78em';
+      btn.style.fontWeight = '500';
+    }
+    btn.onclick = (function(v){
+      return function(){
+        c.querySelectorAll('.mode-icon-btn').forEach(function(b){ b.classList.remove('active') });
+        btn.classList.add('active');
+        if(typeof requestAction !== 'undefined') requestAction('SetModus', v);
+      };
+    })(opt.value);
+    c.appendChild(btn);
+  });
 }
 
 function renderOptions(sectionId, rowId, options, current, action){
@@ -521,6 +669,17 @@ if(typeof requestAction === 'undefined'){
       {value:'3',label:'Mittel'},
       {value:'4',label:'Stark'}
     ],
+    outdoorTemp:18.3, outdoorTempSuffix:'°C',
+    humidityIndoor:58, humidityIndoorSuffix:'%',
+    humidityOutdoor:72, humidityOutdoorSuffix:'%',
+    airDistribution:'1',
+    airDistributionOptions:[
+      {value:'1',label:'Horizontal'},
+      {value:'2',label:'Vertikal'},
+      {value:'3',label:'Swing'},
+      {value:'4',label:'Auto'}
+    ],
+    power:1240, powerSuffix:'W',
     colors:{on:2201331,off:10066329}
   }));
 }

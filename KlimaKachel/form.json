@@ -74,6 +74,50 @@
         {
             "type": "Label",
             "bold": true,
+            "caption": "Zusätzliche Anzeige-Variablen"
+        },
+        {
+            "type": "Label",
+            "caption": "Werden als kompakte Info-Chips am unteren Rand der Kachel angezeigt."
+        },
+        {
+            "name": "OutdoorTempID",
+            "type": "SelectVariable",
+            "caption": "Außentemperatur (optional)",
+            "validVariableTypes": [1, 2],
+            "value": 0
+        },
+        {
+            "name": "HumidityIndoorID",
+            "type": "SelectVariable",
+            "caption": "Luftfeuchte innen (optional)",
+            "validVariableTypes": [1, 2],
+            "value": 0
+        },
+        {
+            "name": "HumidityOutdoorID",
+            "type": "SelectVariable",
+            "caption": "Luftfeuchte außen (optional)",
+            "validVariableTypes": [1, 2],
+            "value": 0
+        },
+        {
+            "name": "AirDistributionID",
+            "type": "SelectVariable",
+            "caption": "Luftverteilung (optional, Darstellung aus Profil)",
+            "validVariableTypes": [1, 3],
+            "value": 0
+        },
+        {
+            "name": "PowerID",
+            "type": "SelectVariable",
+            "caption": "Leistungsaufnahme (optional)",
+            "validVariableTypes": [1, 2],
+            "value": 0
+        },
+        {
+            "type": "Label",
+            "bold": true,
             "caption": "Design"
         },
         {

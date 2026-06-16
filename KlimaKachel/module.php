@@ -13,6 +13,11 @@ class KlimaKachel extends IPSModule
         $this->RegisterPropertyInteger('TargetTemperatureID', 0);
         $this->RegisterPropertyInteger('FanSpeedID', 0);
         $this->RegisterPropertyInteger('SilentModeID', 0);
+        $this->RegisterPropertyInteger('OutdoorTempID', 0);
+        $this->RegisterPropertyInteger('HumidityIndoorID', 0);
+        $this->RegisterPropertyInteger('HumidityOutdoorID', 0);
+        $this->RegisterPropertyInteger('AirDistributionID', 0);
+        $this->RegisterPropertyInteger('PowerID', 0);
         $this->RegisterPropertyBoolean('UseSymconColors', true);
         $this->RegisterPropertyInteger('ColorOn',  2201331);
         $this->RegisterPropertyInteger('ColorOff', 10066329);
@@ -42,6 +47,11 @@ class KlimaKachel extends IPSModule
             $this->ReadPropertyInteger('TargetTemperatureID'),
             $this->ReadPropertyInteger('FanSpeedID'),
             $this->ReadPropertyInteger('SilentModeID'),
+            $this->ReadPropertyInteger('OutdoorTempID'),
+            $this->ReadPropertyInteger('HumidityIndoorID'),
+            $this->ReadPropertyInteger('HumidityOutdoorID'),
+            $this->ReadPropertyInteger('AirDistributionID'),
+            $this->ReadPropertyInteger('PowerID'),
         ];
 
         $anyLinked = false;
@@ -95,6 +105,15 @@ class KlimaKachel extends IPSModule
                 $varID = $this->ReadPropertyInteger('FanSpeedID');
                 if ($varID > 0 && IPS_VariableExists($varID)) {
                     RequestAction($varID, (int) $Value);
+                }
+                break;
+
+            case 'SetAirDistribution':
+                $varID = $this->ReadPropertyInteger('AirDistributionID');
+                if ($varID > 0 && IPS_VariableExists($varID)) {
+                    $var = IPS_GetVariable($varID);
+                    $val = $var['VariableType'] === VARIABLETYPE_STRING ? (string) $Value : (int) $Value;
+                    RequestAction($varID, $val);
                 }
                 break;
 
@@ -207,6 +226,16 @@ class KlimaKachel extends IPSModule
             'fanSpeedOptions'     => [],
             'silentMode'          => null,
             'silentModeEditable'  => false,
+            'outdoorTemp'         => null,
+            'outdoorTempSuffix'   => '°C',
+            'humidityIndoor'      => null,
+            'humidityIndoorSuffix'=> '%',
+            'humidityOutdoor'     => null,
+            'humidityOutdoorSuffix'=> '%',
+            'airDistribution'        => null,
+            'airDistributionOptions' => [],
+            'power'               => null,
+            'powerSuffix'         => 'W',
             'useSymconColors'    => $this->ReadPropertyBoolean('UseSymconColors'),
             'colors'             => [
                 'on'  => $this->ReadPropertyInteger('ColorOn'),
@@ -249,6 +278,108 @@ class KlimaKachel extends IPSModule
             $data['silentModeEditable'] = HasAction($silentModeID);
         }
 
+        $outdoorTempID = $this->ReadPropertyInteger('OutdoorTempID');
+        if ($outdoorTempID > 0 && IPS_VariableExists($outdoorTempID)) {
+            $data['outdoorTemp']       = round((float) GetValue($outdoorTempID), 1);
+            $data['outdoorTempSuffix'] = $this->GetVarSuffix($outdoorTempID, '°C');
+        }
+
+        $humidityIndoorID = $this->ReadPropertyInteger('HumidityIndoorID');
+        if ($humidityIndoorID > 0 && IPS_VariableExists($humidityIndoorID)) {
+            $data['humidityIndoor']       = round((float) GetValue($humidityIndoorID), 0);
+            $data['humidityIndoorSuffix'] = $this->GetVarSuffix($humidityIndoorID, '%');
+        }
+
+        $humidityOutdoorID = $this->ReadPropertyInteger('HumidityOutdoorID');
+        if ($humidityOutdoorID > 0 && IPS_VariableExists($humidityOutdoorID)) {
+            $data['humidityOutdoor']       = round((float) GetValue($humidityOutdoorID), 0);
+            $data['humidityOutdoorSuffix'] = $this->GetVarSuffix($humidityOutdoorID, '%');
+        }
+
+        $airDistID = $this->ReadPropertyInteger('AirDistributionID');
+        if ($airDistID > 0 && IPS_VariableExists($airDistID)) {
+            $data['airDistribution']        = (string) GetValue($airDistID);
+            $data['airDistributionOptions'] = $this->GetVarOptions($airDistID);
+        }
+
+        $powerID = $this->ReadPropertyInteger('PowerID');
+        if ($powerID > 0 && IPS_VariableExists($powerID)) {
+            $data['power']       = round((float) GetValue($powerID), 0);
+            $data['powerSuffix'] = $this->GetVarSuffix($powerID, 'W');
+        }
+
         return $data;
+    }
+
+    private function GetVarSuffix(int $varID, string $default = ''): string
+    {
+        if ($varID <= 0 || !IPS_VariableExists($varID)) {
+            return $default;
+        }
+
+        $var         = IPS_GetVariable($varID);
+        $profileName = $var['VariableCustomProfile'] !== ''
+            ? $var['VariableCustomProfile']
+            : $var['VariableProfile'];
+
+        if ($profileName !== '' && IPS_VariableProfileExists($profileName)) {
+            $suffix = trim(IPS_GetVariableProfile($profileName)['Suffix'] ?? '');
+            if ($suffix !== '') {
+                return $suffix;
+            }
+        }
+
+        if (function_exists('IPS_GetVariablePresentation')) {
+            $pres = IPS_GetVariablePresentation($varID);
+            foreach (['SUFFIX', 'Suffix'] as $key) {
+                if (!empty($pres[$key])) {
+                    return trim($pres[$key]);
+                }
+            }
+        }
+
+        return $default;
+    }
+
+    private function GetAssociationLabel(int $varID): ?string
+    {
+        if ($varID <= 0 || !IPS_VariableExists($varID)) {
+            return null;
+        }
+
+        $var   = IPS_GetVariable($varID);
+        $value = GetValue($varID);
+
+        if ($var['VariableType'] === VARIABLETYPE_STRING) {
+            return (string) $value;
+        }
+
+        if (function_exists('IPS_GetVariablePresentation')) {
+            $pres = IPS_GetVariablePresentation($varID);
+            if (!empty($pres['OPTIONS'])) {
+                $opts = json_decode($pres['OPTIONS'], true);
+                if (is_array($opts)) {
+                    foreach ($opts as $opt) {
+                        if ((string) $opt['Value'] === (string) (int) $value) {
+                            return $opt['Caption'];
+                        }
+                    }
+                }
+            }
+        }
+
+        $profileName = $var['VariableCustomProfile'] !== ''
+            ? $var['VariableCustomProfile']
+            : $var['VariableProfile'];
+
+        if ($profileName !== '' && IPS_VariableProfileExists($profileName)) {
+            foreach (IPS_GetVariableProfile($profileName)['Associations'] as $assoc) {
+                if ((int) $assoc['Value'] === (int) $value) {
+                    return $assoc['Name'];
+                }
+            }
+        }
+
+        return (string) $value;
     }
 }
