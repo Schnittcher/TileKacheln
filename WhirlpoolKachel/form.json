@@ -64,6 +64,36 @@
             "value": 0
         },
         {
+            "name": "LightID",
+            "type": "SelectVariable",
+            "caption": "Licht (Ein/Aus)",
+            "validVariableTypes": [
+                0,
+                1
+            ],
+            "value": 0
+        },
+        {
+            "name": "ChlorID",
+            "type": "SelectVariable",
+            "caption": "Chlor (optional)",
+            "validVariableTypes": [
+                1,
+                2
+            ],
+            "value": 0
+        },
+        {
+            "name": "PhID",
+            "type": "SelectVariable",
+            "caption": "pH-Wert (optional)",
+            "validVariableTypes": [
+                1,
+                2
+            ],
+            "value": 0
+        },
+        {
             "name": "PowerID",
             "type": "SelectVariable",
             "caption": "Leistung / Watt (optional)",
@@ -139,6 +169,12 @@
                     "type": "SelectColor",
                     "caption": "Heizung",
                     "value": 16739072
+                },
+                {
+                    "name": "ColorLight",
+                    "type": "SelectColor",
+                    "caption": "Licht",
+                    "value": 16758784
                 }
             ]
         }

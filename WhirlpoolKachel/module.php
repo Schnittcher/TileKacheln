@@ -12,6 +12,9 @@ class WhirlpoolKachel extends IPSModule
         $this->RegisterPropertyInteger('BubblesID', 0);
         $this->RegisterPropertyInteger('PumpID', 0);
         $this->RegisterPropertyInteger('HeatingID', 0);
+        $this->RegisterPropertyInteger('LightID', 0);
+        $this->RegisterPropertyInteger('ChlorID', 0);
+        $this->RegisterPropertyInteger('PhID', 0);
         $this->RegisterPropertyInteger('PowerID', 0);
         $this->RegisterPropertyInteger('EnergyID', 0);
         $this->RegisterPropertyBoolean('UseSymconColors', true);
@@ -19,6 +22,7 @@ class WhirlpoolKachel extends IPSModule
         $this->RegisterPropertyInteger('ColorBubbles',    46296);
         $this->RegisterPropertyInteger('ColorPump',       2201331);
         $this->RegisterPropertyInteger('ColorHeating',    16739072);
+        $this->RegisterPropertyInteger('ColorLight',      16758784);
 
         $this->SetVisualizationType(1);
     }
@@ -44,6 +48,9 @@ class WhirlpoolKachel extends IPSModule
             $this->ReadPropertyInteger('BubblesID'),
             $this->ReadPropertyInteger('PumpID'),
             $this->ReadPropertyInteger('HeatingID'),
+            $this->ReadPropertyInteger('LightID'),
+            $this->ReadPropertyInteger('ChlorID'),
+            $this->ReadPropertyInteger('PhID'),
             $this->ReadPropertyInteger('PowerID'),
             $this->ReadPropertyInteger('EnergyID'),
         ];
@@ -73,6 +80,7 @@ class WhirlpoolKachel extends IPSModule
             'SetBubbles' => 'BubblesID',
             'SetPump'    => 'PumpID',
             'SetHeating' => 'HeatingID',
+            'SetLight'   => 'LightID',
         ];
 
         if (isset($switchMap[$Ident])) {
@@ -105,6 +113,28 @@ class WhirlpoolKachel extends IPSModule
     }
 
     // ── Private ──────────────────────────────────────────────────────────────
+
+    private function GetVarSuffix(int $varID, string $default = ''): string
+    {
+        $var         = IPS_GetVariable($varID);
+        $profileName = $var['VariableCustomProfile'] !== ''
+            ? $var['VariableCustomProfile']
+            : $var['VariableProfile'];
+
+        if ($profileName !== '' && IPS_VariableProfileExists($profileName)) {
+            $suffix = trim(IPS_GetVariableProfile($profileName)['Suffix'] ?? '');
+            if ($suffix !== '') return $suffix;
+        }
+
+        if (function_exists('IPS_GetVariablePresentation')) {
+            $pres = IPS_GetVariablePresentation($varID);
+            foreach (['SUFFIX', 'Suffix'] as $key) {
+                if (!empty($pres[$key])) return trim($pres[$key]);
+            }
+        }
+
+        return $default;
+    }
 
     private function GetTempConfig(): array
     {
@@ -154,6 +184,11 @@ class WhirlpoolKachel extends IPSModule
             'bubblesOn'   => null,
             'pumpOn'      => null,
             'heatingOn'   => null,
+            'lightOn'     => null,
+            'chlor'       => null,
+            'chlorSuffix' => '',
+            'ph'          => null,
+            'phSuffix'    => '',
             'power'        => null,
             'powerPrefix'  => '',
             'powerUnit'    => '',
@@ -166,6 +201,7 @@ class WhirlpoolKachel extends IPSModule
                 'bubbles' => $this->ReadPropertyInteger('ColorBubbles'),
                 'pump'    => $this->ReadPropertyInteger('ColorPump'),
                 'heating' => $this->ReadPropertyInteger('ColorHeating'),
+                'light'   => $this->ReadPropertyInteger('ColorLight'),
             ],
         ];
 
@@ -179,11 +215,23 @@ class WhirlpoolKachel extends IPSModule
             $data['targetTemp'] = round((float) GetValue($targetTempID), 1);
         }
 
-        foreach (['bubblesOn' => 'BubblesID', 'pumpOn' => 'PumpID', 'heatingOn' => 'HeatingID'] as $key => $prop) {
+        foreach (['bubblesOn' => 'BubblesID', 'pumpOn' => 'PumpID', 'heatingOn' => 'HeatingID', 'lightOn' => 'LightID'] as $key => $prop) {
             $varID = $this->ReadPropertyInteger($prop);
             if ($varID > 0 && IPS_VariableExists($varID)) {
                 $data[$key] = (bool) GetValue($varID);
             }
+        }
+
+        $chlorID = $this->ReadPropertyInteger('ChlorID');
+        if ($chlorID > 0 && IPS_VariableExists($chlorID)) {
+            $data['chlor']       = round((float) GetValue($chlorID), 2);
+            $data['chlorSuffix'] = $this->GetVarSuffix($chlorID);
+        }
+
+        $phID = $this->ReadPropertyInteger('PhID');
+        if ($phID > 0 && IPS_VariableExists($phID)) {
+            $data['ph']       = round((float) GetValue($phID), 2);
+            $data['phSuffix'] = $this->GetVarSuffix($phID);
         }
 
         $powerID = $this->ReadPropertyInteger('PowerID');

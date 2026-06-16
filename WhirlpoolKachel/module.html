@@ -149,6 +149,26 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 .power-sep{color:var(--text-sub,#8C9BAB);opacity:.4}
 .energy-val{color:var(--text-sub,#8C9BAB)}
 
+/* ── Wasser-Qualitäts-Stats (oben links) ─────────── */
+.water-stats{
+  position:absolute;top:0.55em;left:0.55em;
+  display:flex;flex-direction:column;gap:0.3em;
+  z-index:2;
+}
+.water-stat{
+  display:flex;align-items:center;gap:0.28em;
+  font-size:0.78em;color:var(--text-sub);
+  background:color-mix(in srgb,var(--content-color,#fff) 7%,transparent);
+  border-radius:0.4em;padding:0.12em 0.4em;
+  line-height:1.3;
+}
+.water-stat span{font-weight:500;color:var(--text);white-space:nowrap;}
+.ws-icon{
+  width:0.9em;height:0.9em;flex:0 0 auto;
+  stroke:currentColor;fill:none;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+
 /* ── Toggle-Buttons ──────────────────────────────── */
 .toggle-row{display:flex;gap:0.4em}
 .toggle-btn{
@@ -178,6 +198,21 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 
   <!-- Wasser-Anzeige mit Blasen -->
   <div class="water-area" id="water-area">
+    <div class="water-stats">
+      <div class="water-stat" id="ws-chlor" style="display:none">
+        <svg class="ws-icon" viewBox="0 0 24 24">
+          <path d="M9 3h6M10 3v6l-3 5.5a5 5 0 0 0 10 0L14 9V3"/>
+          <line x1="8" y1="13" x2="16" y2="13"/>
+        </svg>
+        <span id="ws-chlor-val">–</span>
+      </div>
+      <div class="water-stat" id="ws-ph" style="display:none">
+        <svg class="ws-icon" viewBox="0 0 24 24">
+          <polyline points="2 12 6 4 10 14 14 8 18 14 22 10"/>
+        </svg>
+        <span id="ws-ph-val">–</span>
+      </div>
+    </div>
     <div id="heat-arrows-wrap">
       <svg class="heat-arrow" style="left:8%; --dur:3.2s;animation-delay:-0.5s"  viewBox="0 0 10 34" preserveAspectRatio="none"><path d="M5,32 C1,27 9,23 5,19 C1,15 9,11 5,8" stroke="rgba(255,90,50,.7)" stroke-width="1.6" fill="none" stroke-linecap="round"/><polygon points="5,1 9,9 1,9" fill="rgba(255,90,50,.7)"/></svg>
       <svg class="heat-arrow" style="left:23%;--dur:2.8s;animation-delay:-1.4s"  viewBox="0 0 10 34" preserveAspectRatio="none"><path d="M5,32 C1,27 9,23 5,19 C1,15 9,11 5,8" stroke="rgba(255,90,50,.7)" stroke-width="1.6" fill="none" stroke-linecap="round"/><polygon points="5,1 9,9 1,9" fill="rgba(255,90,50,.7)"/></svg>
@@ -234,6 +269,10 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
       <span class="t-icon">&#x25D1;</span>
       <span>Heizung</span>
     </button>
+    <button class="toggle-btn hidden" id="btn-light" onclick="toggleSwitch('Light')">
+      <span class="t-icon">&#9728;</span>
+      <span>Licht</span>
+    </button>
   </div>
 
 </div>
@@ -267,6 +306,7 @@ var _targetTemp = null;
 var _bubblesOn  = null;
 var _pumpOn     = null;
 var _heatingOn  = null;
+var _lightOn    = null;
 var _config     = {min:0, max:100, step:0.5};
 
 function intToHex(n){
@@ -321,6 +361,7 @@ function handleMessage(jsonStr){
     setButtonColor('btn-bubbles', colors.bubbles || accentInt);
     setButtonColor('btn-pump',    colors.pump    || 2201331);
     setButtonColor('btn-heating', colors.heating || 16739072);
+    setButtonColor('btn-light',   colors.light   || 16758784);
   }
 
   // Config
@@ -376,10 +417,23 @@ function handleMessage(jsonStr){
   _bubblesOn=d.bubblesOn;
   _pumpOn   =d.pumpOn;
   _heatingOn=d.heatingOn;
+  _lightOn  =d.lightOn;
 
   applySwitch('btn-bubbles',d.bubblesOn);
   applySwitch('btn-pump',   d.pumpOn);
   applySwitch('btn-heating',d.heatingOn);
+  applySwitch('btn-light',  d.lightOn);
+
+  // Wasser-Qualitätswerte
+  function setWaterStat(id, val, sfx){
+    var el = document.getElementById(id);
+    if(val === null || val === undefined){ el.style.display = 'none'; return; }
+    el.style.removeProperty('display');
+    var formatted = parseFloat(val).toString().replace('.',',');
+    document.getElementById(id+'-val').textContent = sfx ? formatted+' '+sfx : formatted;
+  }
+  setWaterStat('ws-chlor', d.chlor, d.chlorSuffix);
+  setWaterStat('ws-ph',    d.ph,    d.phSuffix);
 
   var wrap=document.getElementById('bubbles-wrap');
   wrap.className=(d.bubblesOn===true)?'bubbles-on':'';
@@ -401,13 +455,15 @@ function applySwitch(id,state){
 }
 
 function toggleSwitch(which){
-  var cur=(which==='Bubbles')?_bubblesOn:(which==='Pump')?_pumpOn:_heatingOn;
+  var cur=(which==='Bubbles')?_bubblesOn:(which==='Pump')?_pumpOn:(which==='Heating')?_heatingOn:_lightOn;
   if(cur===null)return;
   var next=!cur;
   if(which==='Bubbles')_bubblesOn=next;
   else if(which==='Pump')_pumpOn=next;
-  else _heatingOn=next;
-  applySwitch(which==='Bubbles'?'btn-bubbles':which==='Pump'?'btn-pump':'btn-heating',next);
+  else if(which==='Heating')_heatingOn=next;
+  else _lightOn=next;
+  var btnId=which==='Bubbles'?'btn-bubbles':which==='Pump'?'btn-pump':which==='Heating'?'btn-heating':'btn-light';
+  applySwitch(btnId,next);
   if(which==='Bubbles')document.getElementById('bubbles-wrap').className=next?'bubbles-on':'';
   if(which==='Heating')document.getElementById('heat-arrows-wrap').className=next?'heat-on':'';
   if(which==='Pump'){var ww=document.getElementById('wave-wrap');ww.className=next?'wave-wrap pump-on':'wave-wrap';}
@@ -426,7 +482,8 @@ function adjustTemp(dir){
 if(typeof requestAction==='undefined'){
   handleMessage(JSON.stringify({
     name:'Whirlpool', currentTemp:38.5, targetTemp:39.0,
-    bubblesOn:true, pumpOn:true, heatingOn:false,
+    bubblesOn:true, pumpOn:true, heatingOn:false, lightOn:true,
+    chlor:0.8, chlorSuffix:'mg/l', ph:7.2, phSuffix:'',
     power:2340, powerUnit:'W', energy:12.5, energyUnit:'kWh',
     config:{min:20, max:42, step:0.5},
     useSymconColors:true,
