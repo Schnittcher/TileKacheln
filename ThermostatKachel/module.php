@@ -11,6 +11,7 @@ class ThermostatKachel extends IPSModule
         $this->RegisterPropertyInteger('TargetTemperatureID', 0);
         $this->RegisterPropertyInteger('HumidityID', 0);
         $this->RegisterPropertyInteger('ValvePositionID', 0);
+        $this->RegisterPropertyInteger('ValvePosition2ID', 0);
         $this->RegisterPropertyInteger('HVACModeID', 0);
         $this->RegisterPropertyBoolean('UseSymconColors', true);
         $this->RegisterPropertyInteger('ColorHeat', 16739072);
@@ -40,6 +41,7 @@ class ThermostatKachel extends IPSModule
             $this->ReadPropertyInteger('TargetTemperatureID'),
             $this->ReadPropertyInteger('HumidityID'),
             $this->ReadPropertyInteger('ValvePositionID'),
+            $this->ReadPropertyInteger('ValvePosition2ID'),
             $this->ReadPropertyInteger('HVACModeID'),
         ];
 
@@ -85,6 +87,21 @@ class ThermostatKachel extends IPSModule
 
             case 'SetValvePosition':
                 $varID = $this->ReadPropertyInteger('ValvePositionID');
+                if ($varID > 0 && IPS_VariableExists($varID)) {
+                    $var = IPS_GetVariable($varID);
+                    if ($var['VariableType'] === 0) {
+                        $val = (bool)(int) $Value;
+                    } elseif ($var['VariableType'] === 1) {
+                        $val = (int) round((float) $Value);
+                    } else {
+                        $val = (float) round((float) $Value, 1);
+                    }
+                    RequestAction($varID, $val);
+                }
+                break;
+
+            case 'SetValvePosition2':
+                $varID = $this->ReadPropertyInteger('ValvePosition2ID');
                 if ($varID > 0 && IPS_VariableExists($varID)) {
                     $var = IPS_GetVariable($varID);
                     if ($var['VariableType'] === 0) {
@@ -163,6 +180,9 @@ class ThermostatKachel extends IPSModule
             'valvePosition'      => null,
             'valveType'          => null,
             'valveEditable'      => false,
+            'valvePosition2'     => null,
+            'valveType2'         => null,
+            'valveEditable2'     => false,
             'hvacMode'           => null,
             'modeOptions'        => [],
             'useSymconColors' => $this->ReadPropertyBoolean('UseSymconColors'),
@@ -201,6 +221,19 @@ class ThermostatKachel extends IPSModule
             } else {
                 $data['valvePosition'] = round((float) GetValue($valveID), 0);
                 $data['valveType']     = 'numeric';
+            }
+        }
+
+        $valve2ID = $this->ReadPropertyInteger('ValvePosition2ID');
+        if ($valve2ID > 0 && IPS_VariableExists($valve2ID)) {
+            $var = IPS_GetVariable($valve2ID);
+            $data['valveEditable2'] = HasAction($valve2ID);
+            if ($var['VariableType'] === 0) {
+                $data['valvePosition2'] = (bool) GetValue($valve2ID);
+                $data['valveType2']     = 'bool';
+            } else {
+                $data['valvePosition2'] = round((float) GetValue($valve2ID), 0);
+                $data['valveType2']     = 'numeric';
             }
         }
 

@@ -55,6 +55,17 @@
             "value": 0
         },
         {
+            "name": "ValvePosition2ID",
+            "type": "SelectVariable",
+            "caption": "2. Ventilposition / Ventilstatus (optional)",
+            "validVariableTypes": [
+                0,
+                1,
+                2
+            ],
+            "value": 0
+        },
+        {
             "name": "HVACModeID",
             "type": "SelectVariable",
             "caption": "HVAC Modus (optional)",

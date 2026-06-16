@@ -94,6 +94,13 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
     var(--c-ui-bg) 100%);
   border:1px solid var(--c-ui-border);
 }
+#valve-slider-2{
+  background:linear-gradient(to right,
+    var(--accent,#444) 0%,
+    var(--accent,#444) var(--vp2,0%),
+    var(--c-ui-bg) var(--vp2,0%),
+    var(--c-ui-bg) 100%);
+}
 .valve-slider::-webkit-slider-thumb{
   -webkit-appearance:none;
   width:1em;height:1em;border-radius:50%;
@@ -162,7 +169,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
   </div>
 
   <div id="valve-row" class="valve-row" style="display:none">
-    <span class="valve-label">Ventil</span>
+    <span class="valve-label" id="valve-label-1">Ventil</span>
     <div id="valve-numeric" class="valve-numeric">
       <input type="range" class="valve-slider" id="valve-slider"
              min="0" max="100" step="1" value="0"
@@ -174,13 +181,27 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
             onclick="sendValveBool()">--</button>
   </div>
 
+  <div id="valve-row-2" class="valve-row" style="display:none">
+    <span class="valve-label">V 2</span>
+    <div id="valve-numeric-2" class="valve-numeric">
+      <input type="range" class="valve-slider" id="valve-slider-2"
+             min="0" max="100" step="1" value="0"
+             oninput="onValveInput2(this.value)"
+             onchange="sendValve2(this.value)">
+      <span class="valve-pct" id="valve-pct-2">0%</span>
+    </div>
+    <button id="valve-toggle-2" class="valve-toggle" style="display:none"
+            onclick="sendValveBool2()">--</button>
+  </div>
+
   <div class="mode-buttons" id="mode-buttons"></div>
 
 </div>
 
 <script>
-var _currentTarget  = null;
-var _valveBoolState = false;
+var _currentTarget   = null;
+var _valveBoolState  = false;
+var _valveBoolState2 = false;
 var _config = {min: 5, max: 30, step: 0.5};
 
 // ── Responsive Skalierung ───────────────────────────────────────────────────
@@ -290,8 +311,9 @@ document.getElementById("current-temp").textContent =
     spWrap.style.display = "none";
   }
 
+  var hasValve1 = d.valvePosition !== null && d.valvePosition !== undefined;
   var valveRow = document.getElementById("valve-row");
-  if (d.valvePosition !== null && d.valvePosition !== undefined) {
+  if (hasValve1) {
     valveRow.style.removeProperty("display");
     var valveEditable = d.valveEditable !== false;
     if (d.valveType === "bool") {
@@ -303,6 +325,23 @@ document.getElementById("current-temp").textContent =
   } else {
     valveRow.style.display = "none";
   }
+
+  var hasValve2 = d.valvePosition2 !== null && d.valvePosition2 !== undefined;
+  var valveRow2 = document.getElementById("valve-row-2");
+  if (hasValve2) {
+    valveRow2.style.removeProperty("display");
+    var valveEditable2 = d.valveEditable2 !== false;
+    if (d.valveType2 === "bool") {
+      setValveBool2(d.valvePosition2, valveEditable2);
+    } else {
+      var vp2 = Math.max(0, Math.min(100, Math.round(d.valvePosition2)));
+      setValveDisplay2(vp2, valveEditable2);
+    }
+  } else {
+    valveRow2.style.display = "none";
+  }
+
+  document.getElementById("valve-label-1").textContent = (hasValve1 && hasValve2) ? "V 1" : "Ventil";
 
   updateModeButtons(d);
 }
@@ -345,6 +384,44 @@ function sendValve(val) {
   if (typeof requestAction !== "undefined") requestAction("SetValvePosition", Math.round(val));
 }
 
+function setValveDisplay2(vp, editable) {
+  document.getElementById("valve-numeric-2").style.removeProperty("display");
+  document.getElementById("valve-toggle-2").style.display = "none";
+  var slider = document.getElementById("valve-slider-2");
+  slider.value = vp;
+  slider.disabled = (editable === false);
+  document.getElementById("valve-pct-2").textContent = vp + "%";
+  document.getElementById("tile").style.setProperty("--vp2", vp + "%");
+}
+
+function setValveBool2(state, editable) {
+  document.getElementById("valve-numeric-2").style.display = "none";
+  _valveBoolState2 = state;
+  var btn = document.getElementById("valve-toggle-2");
+  btn.style.removeProperty("display");
+  btn.textContent = state ? "Offen" : "Zu";
+  btn.className = "valve-toggle" + (state ? " on" : "") + (editable ? "" : " readonly");
+}
+
+function sendValveBool2() {
+  var btn = document.getElementById("valve-toggle-2");
+  if (btn.classList.contains("readonly")) return;
+  _valveBoolState2 = !_valveBoolState2;
+  btn.textContent = _valveBoolState2 ? "Offen" : "Zu";
+  _valveBoolState2 ? btn.classList.add("on") : btn.classList.remove("on");
+  if (typeof requestAction !== "undefined") requestAction("SetValvePosition2", _valveBoolState2 ? 1 : 0);
+}
+
+function onValveInput2(val) {
+  var vp = Math.round(val);
+  document.getElementById("valve-pct-2").textContent = vp + "%";
+  document.getElementById("tile").style.setProperty("--vp2", vp + "%");
+}
+
+function sendValve2(val) {
+  if (typeof requestAction !== "undefined") requestAction("SetValvePosition2", Math.round(val));
+}
+
 function adjustTemp(dir) {
   if (_currentTarget === null) return;
   var next = Math.round((_currentTarget + dir * _config.step) * 10) / 10;
@@ -385,6 +462,7 @@ if (typeof requestAction === 'undefined') {
   handleMessage(JSON.stringify({
     name: 'Thermostat', currentTemp: 21.5, targetTemp: 22.0, targetTempEditable: true, humidity: 48,
     valvePosition: 42, valveType: 'numeric', valveEditable: true,
+    valvePosition2: 28, valveType2: 'numeric', valveEditable2: true,
     hvacMode: 'heat',
     modeOptions: [
       {value: 'heat', label: 'Heizen'}, {value: 'cool', label: 'Kühlen'},
