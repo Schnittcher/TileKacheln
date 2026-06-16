@@ -7,6 +7,16 @@
             "value": "Rollo"
         },
         {
+            "name": "Design",
+            "type": "Select",
+            "caption": "Design",
+            "options": [
+                { "caption": "Rollo", "value": 0 },
+                { "caption": "Markise", "value": 1 }
+            ],
+            "value": 0
+        },
+        {
             "type": "Label",
             "bold": true,
             "caption": "Variablen Verknüpfungen"

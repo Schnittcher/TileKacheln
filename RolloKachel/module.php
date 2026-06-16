@@ -11,6 +11,7 @@ class RolloKachel extends IPSModule
         parent::Create();
 
         $this->RegisterPropertyString('TileName', 'Rollo');
+        $this->RegisterPropertyInteger('Design', 0); // 0 = Rollo, 1 = Markise
         $this->RegisterPropertyInteger('PositionID', 0);
         $this->RegisterPropertyBoolean('Invert', false);
         $this->RegisterPropertyInteger('SlatsID', 0);
@@ -259,6 +260,7 @@ class RolloKachel extends IPSModule
 
         $data = [
             'name'          => $this->ReadPropertyString('TileName'),
+            'design'        => $this->ReadPropertyInteger('Design'),
             'position'      => null,
             'slats'         => null,
             'presets'       => $presets,

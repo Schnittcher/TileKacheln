@@ -143,21 +143,64 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
           <clipPath id="blind-clip">
             <rect id="blind-clip-rect" x="10" y="5" width="100" height="0"/>
           </clipPath>
+          <clipPath id="awning-clip">
+            <polygon id="awning-clip-poly" points="22,16 22,16 22,24 22,24"/>
+          </clipPath>
         </defs>
-        <rect x="10" y="5" width="100" height="82" rx="3" fill="rgba(0,0,0,0.35)"/>
-        <rect x="10" y="5" width="100" height="82" rx="3"
-              style="fill:var(--accent-bg)" clip-path="url(#blind-clip)"/>
-        <g clip-path="url(#blind-clip)" style="stroke:var(--accent)" stroke-width="1.2" opacity="0.6">
-          <line x1="14" y1="17" x2="106" y2="17"/>
-          <line x1="14" y1="29" x2="106" y2="29"/>
-          <line x1="14" y1="41" x2="106" y2="41"/>
-          <line x1="14" y1="53" x2="106" y2="53"/>
-          <line x1="14" y1="65" x2="106" y2="65"/>
-          <line x1="14" y1="77" x2="106" y2="77"/>
+
+        <!-- ROLLO (design=0) -->
+        <g id="rollo-group">
+          <rect x="10" y="5" width="100" height="82" rx="3" fill="rgba(0,0,0,0.35)"/>
+          <rect x="10" y="5" width="100" height="82" rx="3"
+                style="fill:var(--accent-bg)" clip-path="url(#blind-clip)"/>
+          <g clip-path="url(#blind-clip)" style="stroke:var(--accent)" stroke-width="1.2" opacity="0.6">
+            <line x1="14" y1="17" x2="106" y2="17"/>
+            <line x1="14" y1="29" x2="106" y2="29"/>
+            <line x1="14" y1="41" x2="106" y2="41"/>
+            <line x1="14" y1="53" x2="106" y2="53"/>
+            <line x1="14" y1="65" x2="106" y2="65"/>
+            <line x1="14" y1="77" x2="106" y2="77"/>
+          </g>
+          <rect x="10" y="5" width="100" height="82" rx="3"
+                fill="none" style="stroke:var(--c-border)" stroke-width="1.5"/>
+          <rect x="4" y="86" width="112" height="5" rx="2.5" style="fill:var(--c-sill)"/>
         </g>
-        <rect x="10" y="5" width="100" height="82" rx="3"
-              fill="none" style="stroke:var(--c-border)" stroke-width="1.5"/>
-        <rect x="4" y="86" width="112" height="5" rx="2.5" style="fill:var(--c-sill)"/>
+
+        <!-- MARKISE (design=1) -->
+        <g id="markise-group" style="display:none">
+          <!-- Wall -->
+          <rect x="5" y="5" width="8" height="86" rx="1.5" style="fill:var(--c-sill)"/>
+          <!-- Cassette/roll housing -->
+          <rect x="5" y="14" width="17" height="10" rx="2.5"
+                style="fill:color-mix(in srgb,var(--content-color,#fff) 40%,transparent)"/>
+          <!-- Fabric fill -->
+          <polygon id="awning-fabric" points="22,16 22,16 22,24 22,24"
+                   style="fill:var(--accent-bg)"/>
+          <!-- Stripes clipped to fabric shape -->
+          <g clip-path="url(#awning-clip)" stroke-width="3" opacity="0.3" style="stroke:var(--accent)">
+            <line x1="22" y1="21" x2="120" y2="21"/>
+            <line x1="22" y1="28" x2="120" y2="28"/>
+            <line x1="22" y1="35" x2="120" y2="35"/>
+            <line x1="22" y1="42" x2="120" y2="42"/>
+          </g>
+          <!-- Fabric border -->
+          <polygon id="awning-fabric-border" points="22,16 22,16 22,24 22,24"
+                   fill="none" style="stroke:var(--accent)" stroke-width="0.8" stroke-linejoin="round"/>
+          <!-- Upper arm (horizontal) -->
+          <line id="awning-arm-top" x1="22" y1="18" x2="22" y2="18"
+                style="stroke:color-mix(in srgb,var(--content-color,#fff) 50%,transparent)"
+                stroke-width="1.5" stroke-linecap="round"/>
+          <!-- Lower arm (angled) -->
+          <line id="awning-arm-bot" x1="22" y1="24" x2="22" y2="24"
+                style="stroke:color-mix(in srgb,var(--content-color,#fff) 50%,transparent)"
+                stroke-width="1.5" stroke-linecap="round"/>
+          <!-- Outer bar (vertical) -->
+          <line id="awning-bar" x1="22" y1="16" x2="22" y2="24"
+                style="stroke:color-mix(in srgb,var(--content-color,#fff) 60%,transparent)"
+                stroke-width="2.5" stroke-linecap="round"/>
+          <!-- Floor -->
+          <rect x="4" y="86" width="112" height="5" rx="2.5" style="fill:var(--c-sill)"/>
+        </g>
       </svg>
     </div>
   </div>
@@ -210,6 +253,7 @@ var _currentSlats  = null;
 var _automatik     = null;
 var _stopAvailable = false;
 var _stopValue     = true;
+var _design        = 0; // 0 = Rollo, 1 = Markise
 
 function intToHex(n) {
   return '#' + ('000000' + n.toString(16)).slice(-6);
@@ -241,6 +285,17 @@ function handleMessage(jsonStr) {
     var b =  accentInt        & 0xff;
     tile.style.setProperty('--accent',    intToHex(accentInt));
     tile.style.setProperty('--accent-bg', 'rgba(' + r + ',' + g + ',' + b + ',.15)');
+  }
+
+  _design = (d.design === 1) ? 1 : 0;
+  var rolloGrp   = document.getElementById('rollo-group');
+  var markiseGrp = document.getElementById('markise-group');
+  if (_design === 1) {
+    rolloGrp.style.display   = 'none';
+    markiseGrp.style.removeProperty('display');
+  } else {
+    rolloGrp.style.removeProperty('display');
+    markiseGrp.style.display = 'none';
   }
 
   document.getElementById("tile-name").textContent = d.name || "";
@@ -290,7 +345,22 @@ function handleMessage(jsonStr) {
 
 function setShutterPos(pos) {
   var pct = Math.max(0, Math.min(100, pos)) / 100;
-  document.getElementById("blind-clip-rect").setAttribute("height", (pct * 82).toFixed(1));
+  if (_design === 1) {
+    var outerX    = 22 + pct * 86;
+    var outerYbot = 24 + (outerX - 22) * 0.26;
+    var pts = '22,16 ' + outerX.toFixed(1) + ',16 ' + outerX.toFixed(1) + ',' + outerYbot.toFixed(1) + ' 22,24';
+    document.getElementById('awning-fabric').setAttribute('points', pts);
+    document.getElementById('awning-clip-poly').setAttribute('points', pts);
+    document.getElementById('awning-fabric-border').setAttribute('points', pts);
+    document.getElementById('awning-arm-top').setAttribute('x2', outerX.toFixed(1));
+    document.getElementById('awning-arm-bot').setAttribute('x2', outerX.toFixed(1));
+    document.getElementById('awning-arm-bot').setAttribute('y2', outerYbot.toFixed(1));
+    document.getElementById('awning-bar').setAttribute('x1', outerX.toFixed(1));
+    document.getElementById('awning-bar').setAttribute('x2', outerX.toFixed(1));
+    document.getElementById('awning-bar').setAttribute('y2', outerYbot.toFixed(1));
+  } else {
+    document.getElementById("blind-clip-rect").setAttribute("height", (pct * 82).toFixed(1));
+  }
 }
 
 function sendOpen() {
@@ -377,6 +447,7 @@ if (typeof requestAction === 'undefined') {
   handleMessage(JSON.stringify({
     name: 'Wohnzimmer Rollo', position: 65, slats: 30,
     automatik: true, stopAvailable: true, stopValue: true,
+    design: 0,
     presets: [
       {label: 'Lüften', value: 10, display: 10},
       {label: 'Halb',   value: 50, display: 50},
