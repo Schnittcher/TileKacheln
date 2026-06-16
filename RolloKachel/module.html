@@ -69,10 +69,26 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 /* ── Shutter SVG ─────────────────────────────────── */
 .shutter-wrap{
   flex:1 1 auto;min-height:4em;min-width:0;
-  display:flex;align-items:stretch;
-  padding:0.33em 0;
+  display:flex;flex-direction:column;align-items:stretch;
+  padding:0.33em 0;gap:0.25em;
 }
 .shutter-svg{display:block;flex:1;min-height:0;min-width:0;}
+.actual-box{flex:0 0 auto;display:flex;gap:0.5em;}
+.actual-chip{
+  flex:1;min-width:0;
+  padding:0.4em 0.67em;
+  background:var(--c-ui-bg);
+  border-radius:0.67em;
+  border:1px solid var(--c-ui-border);
+}
+.actual-chip-label{
+  font-size:0.7em;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--text-sub);margin-bottom:0.1em;
+}
+.actual-chip-value{
+  font-size:1em;font-weight:500;color:var(--text);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
 
 /* ── Preset-Buttons ──────────────────────────────── */
 .preset-btns{display:flex;gap:0.5em;margin-bottom:0.5em}
@@ -202,6 +218,16 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
           <rect x="4" y="86" width="112" height="5" rx="2.5" style="fill:var(--c-sill)"/>
         </g>
       </svg>
+      <div class="actual-box" id="actual-box" style="display:none">
+        <div class="actual-chip" id="actual-pos" style="display:none">
+          <div class="actual-chip-label">Position</div>
+          <div class="actual-chip-value" id="actual-pos-val">–</div>
+        </div>
+        <div class="actual-chip" id="actual-status" style="display:none">
+          <div class="actual-chip-label">Status</div>
+          <div class="actual-chip-value" id="actual-status-val">–</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -330,6 +356,32 @@ function handleMessage(jsonStr) {
     presetBtns.style.display = "none";
   }
 
+  var hasPos    = d.actualPosition !== null && d.actualPosition !== undefined;
+  var hasStatus = d.actualStatus   !== null && d.actualStatus   !== undefined;
+
+  var actualPos = document.getElementById("actual-pos");
+  if (hasPos) {
+    document.getElementById("actual-pos-val").textContent = Math.round(d.actualPosition) + " %";
+    actualPos.style.removeProperty("display");
+  } else {
+    actualPos.style.display = "none";
+  }
+
+  var actualStatus = document.getElementById("actual-status");
+  if (hasStatus) {
+    document.getElementById("actual-status-val").textContent = d.actualStatus;
+    actualStatus.style.removeProperty("display");
+  } else {
+    actualStatus.style.display = "none";
+  }
+
+  var actualBox = document.getElementById("actual-box");
+  if (hasPos || hasStatus) {
+    actualBox.style.removeProperty("display");
+  } else {
+    actualBox.style.display = "none";
+  }
+
   var slatRow = document.getElementById("slat-row");
   if (d.slats !== null) {
     _currentSlats = d.slats;
@@ -445,7 +497,7 @@ function sendSlat(val) {
 if (typeof requestAction === 'undefined') {
   _config = {step: 10};
   handleMessage(JSON.stringify({
-    name: 'Wohnzimmer Rollo', position: 65, slats: 30,
+    name: 'Wohnzimmer Rollo', position: 65, actualPosition: 62, actualStatus: 'Fährt zu', slats: 30,
     automatik: true, stopAvailable: true, stopValue: true,
     design: 0,
     presets: [

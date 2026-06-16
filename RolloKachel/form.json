@@ -42,6 +42,27 @@
             "value": false
         },
         {
+            "name": "ActualPositionID",
+            "type": "SelectVariable",
+            "caption": "Aktuelle Position (optional, wird unterhalb angezeigt)",
+            "validVariableTypes": [
+                1,
+                2
+            ],
+            "value": 0
+        },
+        {
+            "name": "ActualStatusID",
+            "type": "SelectVariable",
+            "caption": "Aktueller Status (optional, Darstellung aus Profil)",
+            "validVariableTypes": [
+                0,
+                1,
+                3
+            ],
+            "value": 0
+        },
+        {
             "name": "SlatsID",
             "type": "SelectVariable",
             "caption": "Lamellen / Slats (optional)",

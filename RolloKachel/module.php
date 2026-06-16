@@ -16,6 +16,8 @@ class RolloKachel extends IPSModule
         $this->RegisterPropertyBoolean('Invert', false);
         $this->RegisterPropertyInteger('SlatsID', 0);
         $this->RegisterPropertyInteger('AutomatikID', 0);
+        $this->RegisterPropertyInteger('ActualPositionID', 0);
+        $this->RegisterPropertyInteger('ActualStatusID', 0);
         $this->RegisterPropertyInteger('StopID', 0);
         $this->RegisterPropertyInteger('StopValue', 1);
         $this->RegisterAttributeInteger('StopVariableType', VARIABLETYPE_BOOLEAN);
@@ -50,7 +52,7 @@ class RolloKachel extends IPSModule
         }
 
         $anyLinked = false;
-        foreach ([$this->ReadPropertyInteger('PositionID'), $this->ReadPropertyInteger('SlatsID'), $this->ReadPropertyInteger('AutomatikID')] as $varID) {
+        foreach ([$this->ReadPropertyInteger('PositionID'), $this->ReadPropertyInteger('ActualPositionID'), $this->ReadPropertyInteger('ActualStatusID'), $this->ReadPropertyInteger('SlatsID'), $this->ReadPropertyInteger('AutomatikID')] as $varID) {
             if ($varID > 0 && IPS_VariableExists($varID)) {
                 $this->RegisterMessage($varID, VM_UPDATE);
                 $anyLinked = true;
@@ -259,10 +261,12 @@ class RolloKachel extends IPSModule
         $stopAvailable = $stopID > 0 && IPS_VariableExists($stopID);
 
         $data = [
-            'name'          => $this->ReadPropertyString('TileName'),
-            'design'        => $this->ReadPropertyInteger('Design'),
-            'position'      => null,
-            'slats'         => null,
+            'name'            => $this->ReadPropertyString('TileName'),
+            'design'          => $this->ReadPropertyInteger('Design'),
+            'position'        => null,
+            'actualPosition'  => null,
+            'actualStatus'    => null,
+            'slats'           => null,
             'presets'       => $presets,
             'automatik'     => $automatik,
             'stopAvailable' => $stopAvailable,
@@ -282,12 +286,73 @@ class RolloKachel extends IPSModule
             $data['position'] = round($dimVal, 1);
         }
 
+        $actualPosID = $this->ReadPropertyInteger('ActualPositionID');
+        if ($actualPosID > 0 && IPS_VariableExists($actualPosID)) {
+            $dimVal = self::getDimValue($actualPosID);
+            if ($invert) {
+                $dimVal = 100 - $dimVal;
+            }
+            $data['actualPosition'] = round($dimVal, 1);
+        }
+
+        $data['actualStatus'] = $this->GetStatusLabel($this->ReadPropertyInteger('ActualStatusID'));
+
         $slatsID = $this->ReadPropertyInteger('SlatsID');
         if ($slatsID > 0 && IPS_VariableExists($slatsID)) {
             $data['slats'] = round(self::getDimValue($slatsID), 1);
         }
 
         return $data;
+    }
+
+    private function GetStatusLabel(int $varID): ?string
+    {
+        if ($varID <= 0 || !IPS_VariableExists($varID)) {
+            return null;
+        }
+
+        $var   = IPS_GetVariable($varID);
+        $value = GetValue($varID);
+
+        if ($var['VariableType'] === VARIABLETYPE_STRING) {
+            return (string) $value;
+        }
+
+        // IPS 7: Variablendarstellung / OPTIONS
+        if (function_exists('IPS_GetVariablePresentation')) {
+            $pres = IPS_GetVariablePresentation($varID);
+            if (!empty($pres['OPTIONS'])) {
+                $opts = json_decode($pres['OPTIONS'], true);
+                if (is_array($opts)) {
+                    foreach ($opts as $opt) {
+                        if ((string) $opt['Value'] === (string) (int) $value) {
+                            return $opt['Caption'];
+                        }
+                    }
+                }
+            }
+        }
+
+        // Profil-Assoziationen
+        $profileName = $var['VariableCustomProfile'] !== ''
+            ? $var['VariableCustomProfile']
+            : $var['VariableProfile'];
+
+        if ($profileName !== '' && IPS_VariableProfileExists($profileName)) {
+            foreach (IPS_GetVariableProfile($profileName)['Associations'] as $assoc) {
+                $match = $var['VariableType'] === VARIABLETYPE_BOOLEAN
+                    ? ((bool) $assoc['Value'] === (bool) $value)
+                    : ((int) $assoc['Value'] === (int) $value);
+                if ($match) {
+                    return $assoc['Name'];
+                }
+            }
+        }
+
+        // Fallback: Rohwert
+        return $var['VariableType'] === VARIABLETYPE_BOOLEAN
+            ? ($value ? 'true' : 'false')
+            : (string) $value;
     }
 
     private function BuildStopOptions(int $varID): array
