@@ -9,6 +9,9 @@
 - WhirlpoolKachel: Variable für Licht, Chlor und pH.
 - ThermostatKachel: Es kann ein 2. Ventil hinterlegt werden.
 
+### Fixes
+- Der Dokumentationslink der Instanzen führt jetzt zur Dokumentation auf deinsmarthome.info.
+
 ## 28.05.2026 - Version 1.0 Build 6 (Beta Version)
 
 ### Neu
